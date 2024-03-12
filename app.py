@@ -1,27 +1,29 @@
 import streamlit as st
-from database.database import create_connection, add_component, get_components, add_entry, get_entries, delete_entry, generate_report
+from database.database import create_connection, add_component, get_components, add_entry, get_entries, delete_entry, generate_report, add_trabajador, get_trabajadores    
 import pandas as pd
 
 from datetime import datetime, timedelta
 
-
 database = "soldering_db.sqlite"
 conn = create_connection(database)
 
-menu_options = ["Soldering Time Tracker", "Manage Entries", "Generate Report", "Administrar Componentes"]
+menu_options = ["Soldering Time Tracker", "Manage Entries", "Generate Report", "Administrar Componentes", "Administrar Trabajadores"]
 selected_option = st.sidebar.selectbox("Menu", menu_options)
 
 if selected_option == "Soldering Time Tracker":
     st.title('Soldering Time Tracker')
-    worker_name = st.text_input("Worker Name", "")
+    workers_name = get_trabajadores(conn)
+    worker_options = {worker[1]: worker[0] for worker in workers_name}
+    selected_worker = st.selectbox("Worker", list(worker_options.keys()))
+    selected_worker_id = worker_options[selected_worker]
     components = get_components(conn)
-    component_options = {comp[1]: comp[0] for comp in components}  # component_name: component_id
+    component_options = {comp[1]: comp[0] for comp in components}  
     selected_component = st.selectbox("Component", list(component_options.keys()))
     selected_component_id = component_options[selected_component]
     time_spent = st.number_input("Time Spent (Hours)", min_value=0.0, format="%.2f")
     date = st.date_input("Date", datetime.now())
     if st.button("Submit"):
-        add_entry(conn, worker_name, selected_component_id, time_spent, date.strftime("%Y-%m-%d"))
+        add_entry(conn, selected_worker_id, selected_component_id, time_spent, date.strftime("%Y-%m-%d"))
         st.success("Entry added successfully!")
 
 elif selected_option == "Manage Entries":
@@ -54,4 +56,12 @@ elif selected_option == "Administrar Componentes":
     if st.button("Añadir Componente"):
         add_component(conn, component_name, component_code)
         st.success("Componente añadido correctamente.")
+        
+elif selected_option == "Administrar Trabajadores":
+    st.header("Administrar Componentes")
+    trabajador_name = st.text_input("Nombre del Trabajador", "")
+    trabajador_code = st.text_input("Código del Trabajador", "")
+    if st.button("Añadir Trabajador"):
+        add_trabajador(conn,trabajador_name, trabajador_code)
+        st.success("Trabajador añadido correctamente.")
 

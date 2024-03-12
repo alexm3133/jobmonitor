@@ -11,6 +11,7 @@ def create_connection(db_file):
         conn = sqlite3.connect(db_file)
         create_table(conn)
         create_components_table(conn)
+        create_trabajador_table(conn)
     except Error as e:
         st.error(f"Error: {e}")
     return conn
@@ -24,6 +25,7 @@ def create_table(conn):
              time_spent REAL NOT NULL,
              date TEXT NOT NULL,
              FOREIGN KEY (component_id) REFERENCES components(id)
+             FOREIGN KEY (worker_name) REFERENCES users(trabajador_code)
              );"""
     try:
         c = conn.cursor()
@@ -44,6 +46,30 @@ def create_components_table(conn):
     except Error as e:
         st.error(f"Error: {e}")
 
+def create_trabajador_table(conn):
+    """Create the users table if it doesn't already exist"""
+    sql = """CREATE TABLE IF NOT EXISTS users (
+             id INTEGER PRIMARY KEY,
+             trabajador_name TEXT NOT NULL,
+             trabajador_code TEXT UNIQUE NOT NULL
+             );"""
+    try:
+        c = conn.cursor()
+        c.execute(sql)
+    except Error as e:
+        st.error(f"Error: {e}")
+        
+def add_trabajador(conn, trabajador_name, trabajador_code):
+    """Add a new user to the users table"""
+    sql = 'INSERT INTO users(trabajador_name, trabajador_code) VALUES(?, ?)'
+    try:
+        c = conn.cursor()
+        c.execute(sql, (trabajador_name, trabajador_code))
+        conn.commit()
+    except sqlite3.IntegrityError:
+        st.error("Trabajador code already exists.")
+    except Error as e:
+        st.error(f"Error adding trabajador: {e}")
 def add_component(conn, component_name, component_code):
     """Add a new component to the components table"""
     sql = 'INSERT INTO components(component_name, component_code) VALUES(?, ?)'
@@ -56,6 +82,17 @@ def add_component(conn, component_name, component_code):
     except Error as e:
         st.error(f"Error adding component: {e}")
 
+def get_trabajadores(conn):
+    """Fetch all trabajadores from the users table"""
+    sql = 'SELECT * FROM users'
+    try:
+        c = conn.cursor()
+        c.execute(sql)
+        trabajadores = c.fetchall()
+        return trabajadores
+    except Error as e:
+        st.error(f"Error fetching trabajadores: {e}")
+        return []
 def get_components(conn):
     """Fetch all components from the components table"""
     sql = 'SELECT * FROM components'
