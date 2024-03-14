@@ -1,12 +1,14 @@
 from datetime import datetime, timedelta, time
 import streamlit as st
-from database.database import create_connection, add_component, get_components, add_entry, get_entries, delete_entry, generate_report, add_trabajador, get_trabajadores, get_codifications_for_component, add_codification 
 import pandas as pd
 import plotly.express as px
 from datetime import datetime, timedelta
+from database.repository import add_entry, get_trabajadores, get_components, add_component, add_trabajador, get_codifications_for_component, delete_entry, generate_report, get_entries, add_codification
+from database.database_connection import create_connection,setup_database
 
 database = "soldering_db.sqlite"
 conn = create_connection(database)
+setup_database(conn)
 
 menu_options = ["Gestion Tiempos Soldadura", "Gestionar entradas", "Generar Reporte", "Administrar Componentes", "Administrar Trabajadores"]
 selected_option = st.sidebar.selectbox("Menú", menu_options)
@@ -111,8 +113,8 @@ elif selected_option == "Administrar Componentes":
         if component_id:
             add_codification(conn, component_id, codification_text)
             st.success("Componente y codificación añadidos correctamente.")
-
-
+        else:
+            st.error("Error añadiendo componente y codificación.")
         
 elif selected_option == "Administrar Trabajadores":
     st.header("Administrar Componentes")
