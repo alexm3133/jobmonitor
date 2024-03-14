@@ -2,13 +2,13 @@ from datetime import datetime, timedelta, time
 import streamlit as st
 from database.database import create_connection, add_component, get_components, add_entry, get_entries, delete_entry, generate_report, add_trabajador, get_trabajadores, get_codifications_for_component, add_codification 
 import pandas as pd
-
+import plotly.express as px
 from datetime import datetime, timedelta
 
 database = "soldering_db.sqlite"
 conn = create_connection(database)
 
-menu_options = ["Gestion Tiempos Soldadura", "Gestionar entradas", "Generate Report", "Administrar Componentes", "Administrar Trabajadores"]
+menu_options = ["Gestion Tiempos Soldadura", "Gestionar entradas", "Generar Reporte", "Administrar Componentes", "Administrar Trabajadores"]
 selected_option = st.sidebar.selectbox("Menú", menu_options)
 
 if selected_option == "Gestion Tiempos Soldadura":
@@ -43,8 +43,6 @@ if selected_option == "Gestion Tiempos Soldadura":
         st.success("Entrada añadida correctamente!")
 
 
-
-
 elif selected_option == "Gestionar entradas":
     st.header("Gestionar entradas")
     entries = get_entries(conn)
@@ -59,23 +57,57 @@ elif selected_option == "Gestionar entradas":
     with col2:
         if st.button("Edit", key="edit"):
             pass
-elif selected_option == "Generate Report":
-    st.header("Generate Report")
-    start_date = st.date_input("Start Date", datetime.now() - timedelta(days=30))
-    end_date = st.date_input("End Date", datetime.now())
-    if st.button("Generate"):
+elif selected_option == "Generar Reporte":
+    st.header("Generar Reporte")
+    start_date = st.date_input("Fecha de Inicio", datetime.now() - timedelta(days=30))
+    end_date = st.date_input("Fecha de Fin", datetime.now())
+
+    # Permitir al usuario seleccionar un componente específico
+    component_names = [comp[1] for comp in get_components(conn)]  # Asume que get_components retorna una lista de tuplas (id, nombre)
+    selected_component_name = st.selectbox("Selecciona el componente:", component_names)
+    
+    if st.button("Generar"):
         report_df = generate_report(conn, start_date.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d"))
-        st.dataframe(report_df)
-        # Optional: Add visualization code here
+        
+        # Filtrar el reporte por el componente seleccionado
+        filtered_df = report_df[report_df['Component Name'] == selected_component_name]
+        
+        if not filtered_df.empty:
+            import plotly.express as px
+
+            # Agrupa por 'Worker Name' y calcula el tiempo total gastado en el componente seleccionado
+            grouped_df = filtered_df.groupby(['Worker Name'])['Time Spent'].sum().reset_index()
+
+            # Dibujar un gráfico de barras con Plotly
+            fig = px.bar(grouped_df, x='Worker Name', y='Time Spent',
+                         title=f'Tiempo Total Gastado por Trabajador en {selected_component_name}',
+                         labels={'Time Spent': 'Tiempo Gastado (horas)', 'Worker Name': 'Trabajador'},
+                         color='Time Spent',  # Esto asignará colores basados en el tiempo gastado
+                         color_continuous_scale=px.colors.sequential.Viridis)  # Usa una escala de colores predefinida
+
+            # Mejora de la estilización
+            fig.update_layout(
+                xaxis_title="Trabajador",
+                yaxis_title="Tiempo Gastado (horas)",
+                plot_bgcolor='rgba(0,0,0,0)',  # Fondo transparente
+                xaxis_tickangle=-45,  # Ángulo de las etiquetas del eje x
+                template='plotly_white',  # Utiliza el tema 'plotly_white' para un fondo claro
+            )
+
+            st.plotly_chart(fig)
+
+        else:
+            st.write("No hay datos disponibles para el componente seleccionado en el rango de fechas dado.")
+
 
 elif selected_option == "Administrar Componentes":
     st.header("Administrar Componentes")
     component_name = st.text_input("Nombre del Componente", "")
-    component_code = st.text_input("Código del Componente", "")
-    codification_text = st.text_input("Codificación del Componente", "")  # Asumiendo que quieres añadir esto también
+
+    codification_text = st.text_input("Codificación del Componente", "")  
 
     if st.button("Añadir Componente"):
-        component_id = add_component(conn, component_name, component_code)
+        component_id = add_component(conn, component_name, codification_text)
         if component_id:
             add_codification(conn, component_id, codification_text)
             st.success("Componente y codificación añadidos correctamente.")

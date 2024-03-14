@@ -139,10 +139,14 @@ def add_entry(conn, worker_name, component_id, time_spent, date, quantity, start
         st.error(f"Error adding entry: {e}")
 
 
-
 def get_entries(conn):
-    """Fetch all entries from the soldering_entries table"""
-    sql = 'SELECT se.id, se.date, se.time_spent, c.component_name, c.component_code, se.worker_name FROM soldering_entries se JOIN components c ON se.component_id = c.id'
+    """Fetch all entries from the soldering_entries table, including worker names instead of IDs."""
+    sql = '''
+    SELECT se.id, se.date, se.time_spent, c.component_name, c.component_code, u.trabajador_name 
+    FROM soldering_entries se 
+    JOIN components c ON se.component_id = c.id 
+    JOIN users u ON se.worker_name = u.id  -- Asegúrate de que esta es la columna correcta para el JOIN
+    '''
     try:
         c = conn.cursor()
         c.execute(sql)
@@ -151,6 +155,7 @@ def get_entries(conn):
     except Error as e:
         st.error(f"Error fetching entries: {e}")
         return []
+
 
 def delete_entry(conn, entry_id):
     """Delete an entry from the soldering_entries table"""
@@ -173,12 +178,19 @@ def update_entry(conn, entry_id, worker_name, component_id, time_spent):
         st.error(f"Error updating entry: {e}")
 
 def generate_report(conn, start_date, end_date):
-    """Generate a report of entries within a specific date range"""
-    sql = '''SELECT se.date, se.time_spent, c.component_name, c.component_code, se.worker_name FROM soldering_entries se JOIN components c ON se.component_id = c.id WHERE date BETWEEN ? AND ?'''
+    """Generate a report of entries within a specific date range, including worker names."""
+    sql = '''
+    SELECT se.date, se.time_spent, c.component_name, c.component_code, u.trabajador_name 
+    FROM soldering_entries se
+    JOIN components c ON se.component_id = c.id
+    JOIN users u ON u.id = se.worker_name  -- Asegúrate de que esta sea la relación correcta
+    WHERE se.date BETWEEN ? AND ?
+    '''
     try:
         c = conn.cursor()
         c.execute(sql, (start_date, end_date))
         entries = c.fetchall()
+        # Asegúrate de que las columnas se mapean correctamente a los nombres en tu DataFrame
         df = pd.DataFrame(entries, columns=['Date', 'Time Spent', 'Component Name', 'Component Code', 'Worker Name'])
         return df
     except Error as e:
