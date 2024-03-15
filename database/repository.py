@@ -29,7 +29,6 @@ def add_component(conn, component_name, component_code):
         st.error(f"Error adding component: {e}")
         return None
 
-
 def get_trabajadores(conn):
     """Fetch all trabajadores from the users table"""
     sql = 'SELECT * FROM users'
@@ -52,25 +51,36 @@ def get_components(conn):
     except Error as e:
         st.error(f"Error fetching components: {e}")
         return []
-
-def add_entry(conn, worker_name, component_id, time_spent, date, quantity, start_time, end_time):
-    """Add a new entry to the soldering_entries table without codification detail."""
-    sql = '''INSERT INTO soldering_entries(worker_name, component_id, time_spent, date, quantity, start_time, end_time) VALUES(?,?,?,?,?,?,?)'''
+    
+def add_entry(conn, worker_name, component_id, time_spent, start_datetime, quantity, start_datetime_str, end_datetime_str, codification):
+    """Add a new entry to the soldering_entries table with detailed time and codification."""
+    sql = '''INSERT INTO soldering_entries(worker_name, component_id, time_spent, date, quantity, start_time, end_time, codification) VALUES(?,?,?,?,?,?,?,?)'''
+    # La fecha ahora se extrae del 'start_datetime'
+    date = start_datetime.split(' ')[0]
     try:
         c = conn.cursor()
-        c.execute(sql, (worker_name, component_id, time_spent, date, quantity, start_time, end_time))
+        # Asegúrate de pasar los argumentos en el orden correcto y formatear las fechas/horas como strings si es necesario
+        c.execute(sql, (worker_name, component_id, time_spent, date, quantity, start_datetime_str, end_datetime_str, codification))
         conn.commit()
     except Error as e:
         st.error(f"Error adding entry: {e}")
 
 
 def get_entries(conn):
-    """Fetch all entries from the soldering_entries table, including worker names instead of IDs."""
+    """Fetch entries with component, piece, codification, worker, start/end dates, quantity, and calculate total and average time spent per piece."""
     sql = '''
-    SELECT se.id, se.date, se.time_spent, c.component_name, c.component_code, u.trabajador_name 
-    FROM soldering_entries se 
-    JOIN components c ON se.component_id = c.id 
-    JOIN users u ON se.worker_name = u.id  -- Asegúrate de que esta es la columna correcta para el JOIN
+    SELECT 
+        c.component_name, 
+        se.codification, 
+        u.trabajador_name, 
+        se.start_time AS 'Start Date', 
+        se.end_time AS 'End Date', 
+        se.quantity AS 'Quantity', 
+        se.time_spent AS 'Total Time Spent',
+        (se.time_spent / se.quantity) AS 'Average Time Per Piece'
+    FROM soldering_entries se
+    JOIN components c ON se.component_id = c.id
+    JOIN users u ON se.worker_name = u.id
     '''
     try:
         c = conn.cursor()

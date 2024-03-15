@@ -5,6 +5,7 @@ import plotly.express as px
 from datetime import datetime, timedelta
 from database.repository import add_entry, get_trabajadores, get_components, add_component, add_trabajador, get_codifications_for_component, delete_entry, generate_report, get_entries, add_codification
 from database.database_connection import create_connection,setup_database
+from utils.calcular_horas_laborales import calcular_horas_laborales, segundos_a_horas_minutos
 
 database = "soldering_db.sqlite"
 conn = create_connection(database)
@@ -20,12 +21,11 @@ if selected_option == "Gestion Tiempos Soldadura":
     worker_options = {worker[1]: worker[0] for worker in workers_name}
     selected_worker = st.selectbox("Empleado", list(worker_options.keys()))
     selected_worker_id = worker_options[selected_worker]
-    
+
     components = get_components(conn)
     component_options = {comp[1]: comp[0] for comp in components}  
     selected_component = st.selectbox("Componente", list(component_options.keys()))
     selected_component_id = component_options[selected_component]
-    
     # Entradas para codificación y cantidad
     codifications = get_codifications_for_component(conn, selected_component_id)
     selected_codification = st.selectbox("Codificación del Componente", codifications)
@@ -34,21 +34,35 @@ if selected_option == "Gestion Tiempos Soldadura":
     # Entradas para fechas de inicio y fin, y duración en minutos
     start_date = st.date_input("Fecha de Inicio", datetime.now())
     end_date = st.date_input("Fecha de Fin", datetime.now())
-    duration_minutes = st.number_input("Duración (minutos)", min_value=0, value=0, step=1)
+    start_time = st.time_input("Hora de Inicio", time(6, 0))  
+    end_time = st.time_input("Hora de Fin", time(14, 0)) 
+    start_datetime = datetime.combine(start_date, start_time).strftime("%Y-%m-%d %H:%M")
+    end_datetime = datetime.combine(end_date, end_time).strftime("%Y-%m-%d %H:%M")
 
-    # Convertir la duración a horas para mantener la consistencia con la base de datos
-    time_spent_hours = duration_minutes / 60
-    
     if st.button("Añadir Entrada"):
-        # Llama a add_entry sin el argumento 'selected_codification'
-        add_entry(conn, selected_worker_id, selected_component_id, time_spent_hours, start_date.strftime("%Y-%m-%d"), quantity, start_date.strftime("%H:%M"), end_date.strftime("%H:%M"))
-        st.success("Entrada añadida correctamente!")
+        start_datetime = datetime.combine(start_date, start_time)
+        end_datetime = datetime.combine(end_date, end_time)
+        total_segundos = calcular_horas_laborales(start_datetime, end_datetime) * 3600  # Convertir horas a segundos
+        horas_trabajadas, minutos_trabajados = segundos_a_horas_minutos(total_segundos)
+        
+        # Formatear la salida para incluir tanto horas como minutos
+        tiempo_trabajado_str = f"{int(horas_trabajadas)} horas y {int(minutos_trabajados)} minutos"
+        
+        # A continuación, puedes usar 'tiempo_trabajado_str' para mostrarlo en la UI
+        # O convertir 'horas_trabajadas' y 'minutos_trabajados' a un decimal o a la forma que prefieras para almacenar en la base de datos
+        # Por ejemplo, si prefieres almacenar en horas como decimal:
+        tiempo_trabajado_decimal = horas_trabajadas + minutos_trabajados / 60.0
+        
+        # Luego procedes a añadir la entrada con el tiempo trabajado
+        add_entry(conn, selected_worker_id, selected_component_id, tiempo_trabajado_decimal, start_datetime.strftime("%Y-%m-%d %H:%M"), quantity, start_datetime.strftime("%Y-%m-%d %H:%M"), end_datetime.strftime("%Y-%m-%d %H:%M"), selected_codification)
+        st.success(f"Entrada añadida correctamente! Tiempo trabajado: {tiempo_trabajado_str}")
 
 
 elif selected_option == "Gestionar entradas":
     st.header("Gestionar entradas")
     entries = get_entries(conn)
-    entries_df = pd.DataFrame(entries, columns=['ID', 'Date', 'Time Spent', 'Component Name', 'Component Code', 'Worker Name'])
+    # Omitimos 'ID' al crear el DataFrame
+    entries_df = pd.DataFrame(entries, columns=['Component Name', 'Codification', 'Worker Name', 'Start Date', 'End Date', 'Quantity', 'Total Time Spent', 'Average Time Per Piece'])
     st.dataframe(entries_df)
     entry_id_to_edit_or_delete = st.number_input("Enter ID of entry to edit or delete", min_value=0, format="%d", key="edit_delete")
     col1, col2 = st.columns(2)
@@ -58,12 +72,14 @@ elif selected_option == "Gestionar entradas":
             st.success(f"Entry {entry_id_to_edit_or_delete} deleted successfully!")
     with col2:
         if st.button("Edit", key="edit"):
+            # Aquí deberías agregar tu lógica para editar una entrada específica.
             pass
 elif selected_option == "Generar Reporte":
     st.header("Generar Reporte")
     start_date = st.date_input("Fecha de Inicio", datetime.now() - timedelta(days=30))
     end_date = st.date_input("Fecha de Fin", datetime.now())
-
+    start_time = st.time_input("Hora de Inicio", time(6, 0))  # Ejemplo: comienza a las 9:00 por defecto
+    end_time = st.time_input("Hora de Fin", time(14, 0))  # Ejemplo: termina a las 17:00 por defecto
     # Permitir al usuario seleccionar un componente específico
     component_names = [comp[1] for comp in get_components(conn)]  # Asume que get_components retorna una lista de tuplas (id, nombre)
     selected_component_name = st.selectbox("Selecciona el componente:", component_names)
@@ -100,7 +116,6 @@ elif selected_option == "Generar Reporte":
 
         else:
             st.write("No hay datos disponibles para el componente seleccionado en el rango de fechas dado.")
-
 
 elif selected_option == "Administrar Componentes":
     st.header("Administrar Componentes")
