@@ -13,44 +13,52 @@ def create_connection(db_file):
 
 def setup_database(conn):
     """Create tables if they do not exist and perform any necessary initial setup."""
-    sql_create_projects_table = """ CREATE TABLE IF NOT EXISTS components (
-                                        id integer PRIMARY KEY,
-                                        component_name text NOT NULL,
-                                        component_code text UNIQUE NOT NULL
-                                    ); """
+    # Updated components table schema without component_code
+    sql_create_components_table = """ 
+    CREATE TABLE IF NOT EXISTS components (
+        id integer PRIMARY KEY,
+        component_name text UNIQUE NOT NULL
+    ); """
 
-    sql_create_tasks_table = """CREATE TABLE IF NOT EXISTS soldering_entries (
-                                    id integer PRIMARY KEY,
-                                    worker_name text NOT NULL,
-                                    component_id integer NOT NULL,
-                                    time_spent real NOT NULL,
-                                    date text NOT NULL,
-                                    codification text,
-                                    quantity integer NOT NULL DEFAULT 1,
-                                    start_time text,
-                                    end_time text,
-                                    FOREIGN KEY (component_id) REFERENCES components (id)
-                                );"""
+    # Presuming soldering_entries table remains the same but ensuring its relevance
+    sql_create_soldering_entries_table = """
+    CREATE TABLE IF NOT EXISTS soldering_entries (
+        id integer PRIMARY KEY,
+        worker_name text NOT NULL,
+        component_id integer NOT NULL,
+        time_spent real NOT NULL,
+        date text NOT NULL,
+        codification text, -- Make sure this use aligns with new codification strategy
+        quantity integer NOT NULL DEFAULT 1,
+        start_time text,
+        end_time text,
+        FOREIGN KEY (component_id) REFERENCES components (id)
+    );"""
 
-    sql_create_users_table = """CREATE TABLE IF NOT EXISTS users (
-                                    id integer PRIMARY KEY,
-                                    trabajador_name text NOT NULL,
-                                    trabajador_code text UNIQUE NOT NULL
-                                );"""
+    # Assuming users table remains unchanged
+    sql_create_users_table = """
+    CREATE TABLE IF NOT EXISTS users (
+        id integer PRIMARY KEY,
+        trabajador_name text NOT NULL,
+        trabajador_code text UNIQUE NOT NULL
+    );"""
 
-    sql_create_codifications_table = """CREATE TABLE IF NOT EXISTS component_codifications (
-                                            id integer PRIMARY KEY,
-                                            component_id integer NOT NULL,
-                                            codification text NOT NULL,
-                                            FOREIGN KEY (component_id) REFERENCES components (id)
-                                        );"""
+    # New component_codifications table to handle multiple codifications per component
+    sql_create_codifications_table = """
+    CREATE TABLE IF NOT EXISTS component_codifications (
+        id integer PRIMARY KEY,
+        component_id integer NOT NULL,
+        codification text NOT NULL,
+        UNIQUE(component_id, codification),
+        FOREIGN KEY (component_id) REFERENCES components (id)
+    );"""
 
     if conn is not None:
         # Create tables
         try:
             c = conn.cursor()
-            c.execute(sql_create_projects_table)
-            c.execute(sql_create_tasks_table)
+            c.execute(sql_create_components_table)
+            c.execute(sql_create_soldering_entries_table)
             c.execute(sql_create_users_table)
             c.execute(sql_create_codifications_table)
             print("Database tables are set up.")

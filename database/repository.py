@@ -14,20 +14,21 @@ def add_trabajador(conn, trabajador_name, trabajador_code):
         st.error("Trabajador code already exists.")
     except Error as e:
         st.error(f"Error adding trabajador: {e}")
-def add_component(conn, component_name, component_code):
+def add_component(conn, component_name):
     """Add a new component to the components table and return its ID."""
-    sql = 'INSERT INTO components(component_name, component_code) VALUES(?, ?)'
+    sql = 'INSERT INTO components(component_name) VALUES(?)'
     try:
         c = conn.cursor()
-        c.execute(sql, (component_name, component_code))
+        c.execute(sql, (component_name,))
         conn.commit()
         return c.lastrowid  # Devuelve el ID del nuevo componente
     except sqlite3.IntegrityError:
-        st.error("Component code already exists.")
+        st.error("Component name already exists.")
         return None
     except Error as e:
         st.error(f"Error adding component: {e}")
         return None
+
 
 def get_trabajadores(conn):
     """Fetch all trabajadores from the users table"""
