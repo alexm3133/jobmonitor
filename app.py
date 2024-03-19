@@ -6,8 +6,8 @@ from components.gestionar_entradas_tiempos import gestionar_entradas_tiempos
 from components.generar_graficos import generar_graficos
 from components.administrar_componentes import administrar_componentes
 from components.administrar_trabajadores import administrar_trabajadores
-from auth.login_page import login_page
-from auth.login_page import logout
+from auth.auth import logout
+from components.login import login_page
 
 # Initialize the database
 database = "soldering_db.sqlite"
