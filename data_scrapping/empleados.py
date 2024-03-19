@@ -12,21 +12,22 @@ def insert_employees_from_csv(csv_file_path, db_file_path):
             id INTEGER PRIMARY KEY,
             trabajador_name TEXT NOT NULL,
             trabajador_code INTEGER UNIQUE NOT NULL,
-            trabajador_password TEXT NOT NULL
+            trabajador_password TEXT NOT NULL,
+            priority integer DEFAULT 2
         );
     ''')
     conn.commit()
 
     # Leer el archivo CSV
-    df = pd.read_csv(csv_file_path, header=None, names=['trabajador_name', 'trabajador_code', 'trabajador_password'])
+    df = pd.read_csv(csv_file_path, header=None, names=['trabajador_name', 'trabajador_code', 'trabajador_password', 'priority'])
 
     # Insertar empleados en la base de datos
     for index, row in df.iterrows():
         try:
             cursor.execute('''
-                INSERT INTO users (trabajador_name, trabajador_code, trabajador_password) 
-                VALUES (?, ?, ?)
-            ''', (row['trabajador_name'], row['trabajador_code'], row['trabajador_password']))
+                INSERT INTO users (trabajador_name, trabajador_code, trabajador_password, priority) 
+                VALUES (?, ?, ?, ?)
+            ''', (row['trabajador_name'], row['trabajador_code'], row['trabajador_password'], row['priority']))
         except sqlite3.IntegrityError as e:
             print(f"No se pudo insertar al empleado {row['trabajador_name']} debido a un error de integridad: {e}")
         except sqlite3.Error as e:

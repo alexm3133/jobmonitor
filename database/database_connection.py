@@ -52,7 +52,8 @@ def setup_database(conn):
         id integer PRIMARY KEY,
         trabajador_name text NOT NULL,
         trabajador_code text UNIQUE NOT NULL,
-        trabajador_password text NOT NULL
+        trabajador_password text NOT NULL,
+        priority integer DEFAULT 2
     );"""
 
     sql_create_codifications_table = """

@@ -16,27 +16,43 @@ setup_database(conn)
 
 # Main application function
 def app():
-    menu_options = {
-        "Gestion Tiempos Soldadura": gestion_tiempos_soldadura,
-        "Gestionar Entradas": gestionar_entradas_tiempos,
-        "Generar Reporte": generar_graficos,
-        "Administrar Componentes": administrar_componentes,
-        "Administrar Trabajadores": administrar_trabajadores,
-    }
-    menu_icons = ["tools", "clipboard-data", "graph-up", "puzzle", "person"]
+    # Check user priority and display options based on that
+    user_priority = st.session_state.get('user_priority', 2)  # Default to priority 2 if not set
+    if user_priority == 1:
+        # Full menu options for priority 1 users
+        menu_options = {
+            "Gestion Tiempos Soldadura": gestion_tiempos_soldadura,
+            "Gestionar Entradas": gestionar_entradas_tiempos,
+            "Generar Reporte": generar_graficos,
+            "Administrar Componentes": administrar_componentes,
+            "Administrar Trabajadores": administrar_trabajadores,
+        }
+        menu_icons = ["tools", "clipboard-data", "graph-up", "puzzle", "person"]
+        with st.sidebar:
+            selected_option = option_menu("Menú Principal", list(menu_options.keys()), 
+                                        icons=menu_icons, menu_icon="cast", default_index=0)
 
-    with st.sidebar:
-        selected_option = option_menu("Menú Principal", list(menu_options.keys()), 
-                                      icons=menu_icons, menu_icon="cast", default_index=0)
-
-    if selected_option:
-        menu_options[selected_option](conn)
-    if st.sidebar.button("Logout"):
+        if selected_option:
+            menu_options[selected_option](conn)
+    else:
+        # Only show a greeting for non-priority 1 users
+        menu_options = {
+            "Hola": lambda: st.sidebar.write("¡Hola! No tienes acceso a las funciones administrativas.")
+        }
+        
+        menu_icons = ["emoji-smile"]
+        with st.sidebar:
+            selected_option = option_menu("Menú Principal", list(menu_options.keys()), 
+                                        icons=menu_icons, menu_icon="cast", default_index=0)
+      
+    # Logout button
+    if st.sidebar.button("Cerrar session"):
         logout()
 
+# Authentication check before showing the app
 if 'authenticated' not in st.session_state:
     st.session_state['authenticated'] = False
-# Check if user is authenticated before showing the app
+
 if st.session_state['authenticated']:
     app()
 else:
