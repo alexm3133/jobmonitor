@@ -2,7 +2,9 @@ import sqlite3
 from sqlite3 import Error
 
 def create_connection(db_file):
-    """Create a database connection to the SQLite database specified by db_file."""
+    """
+    Create a database connection to the SQLite database specified by db_file.
+    """
     conn = None
     try:
         conn = sqlite3.connect(db_file)
@@ -12,15 +14,16 @@ def create_connection(db_file):
     return conn
 
 def setup_database(conn):
-    """Create tables if they do not exist and perform any necessary initial setup."""
-    # Updated components table schema without component_code
+    """
+    Create tables if they do not exist and perform any necessary initial setup, including admin user insertion.
+    """
+    # SQL statements for creating tables
     sql_create_components_table = """ 
     CREATE TABLE IF NOT EXISTS components (
         id integer PRIMARY KEY,
         component_name text UNIQUE NOT NULL
     ); """
-
-    # Presuming soldering_entries table remains the same but ensuring its relevance
+    
     sql_create_soldering_entries_table = """
     CREATE TABLE IF NOT EXISTS soldering_entries (
         id integer PRIMARY KEY,
@@ -28,22 +31,21 @@ def setup_database(conn):
         component_id integer NOT NULL,
         time_spent real NOT NULL,
         date text NOT NULL,
-        codification text, -- Make sure this use aligns with new codification strategy
+        codification text,
         quantity integer NOT NULL DEFAULT 1,
         start_time text,
         end_time text,
         FOREIGN KEY (component_id) REFERENCES components (id)
     );"""
 
-    # Assuming users table remains unchanged
     sql_create_users_table = """
     CREATE TABLE IF NOT EXISTS users (
         id integer PRIMARY KEY,
         trabajador_name text NOT NULL,
-        trabajador_code text UNIQUE NOT NULL
+        trabajador_code text UNIQUE NOT NULL,
+        trabajador_password text NOT NULL
     );"""
 
-    # New component_codifications table to handle multiple codifications per component
     sql_create_codifications_table = """
     CREATE TABLE IF NOT EXISTS component_codifications (
         id integer PRIMARY KEY,
@@ -54,7 +56,6 @@ def setup_database(conn):
     );"""
 
     if conn is not None:
-        # Create tables
         try:
             c = conn.cursor()
             c.execute(sql_create_components_table)
@@ -62,18 +63,45 @@ def setup_database(conn):
             c.execute(sql_create_users_table)
             c.execute(sql_create_codifications_table)
             print("Database tables are set up.")
+            
+            # Check and insert admin user
+            insert_admin_user_if_not_exists(conn)
+            
         except Error as e:
             print(f"Error creating tables: {e}")
     else:
         print("Error! cannot create the database connection.")
 
+def insert_admin_user_if_not_exists(conn):
+    """
+    Inserts the admin user if it does not already exist in the users table.
+    """
+    admin_user = ('Admin', 'admin', 'ChangeMe123!')
+    find_admin_sql = "SELECT * FROM users WHERE trabajador_code='admin'"
+    insert_admin_sql = ''' INSERT INTO users(trabajador_name, trabajador_code, trabajador_password)
+              VALUES(?,?,?) '''
+    
+    cursor = conn.cursor()
+    cursor.execute(find_admin_sql)
+    admin = cursor.fetchone()
+    
+    if not admin:
+        try:
+            cursor.execute(insert_admin_sql, admin_user)
+            conn.commit()
+            print("Admin user created successfully.")
+        except Error as e:
+            print(f"Error inserting admin user: {e}")
+    else:
+        print("Admin user already exists.")
+
 def main():
     database = "soldering_db.sqlite"
 
-    # create a database connection
+    # Create a database connection
     conn = create_connection(database)
 
-    # setup database tables
+    # Setup database tables and ensure admin user is setup
     setup_database(conn)
 
 if __name__ == '__main__':

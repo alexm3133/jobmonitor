@@ -3,17 +3,27 @@ from sqlite3 import Error
 import pandas as pd
 import streamlit as st
 
-def add_trabajador(conn, trabajador_name, trabajador_code):
-    """Add a new user to the users table"""
-    sql = 'INSERT INTO users(trabajador_name, trabajador_code) VALUES(?, ?)'
+def add_trabajador(conn, trabajador_name, trabajador_code, trabajador_password):
+    """
+    Añade un nuevo trabajador a la tabla de usuarios con contraseña.
+
+    Parameters:
+    - conn: La conexión a la base de datos.
+    - trabajador_name: Nombre del trabajador.
+    - trabajador_code: Código único del trabajador.
+    - trabajador_password: Contraseña del trabajador.
+    """
+    sql = '''INSERT INTO users(trabajador_name, trabajador_code, trabajador_password)
+             VALUES(?, ?, ?)'''
     try:
         c = conn.cursor()
-        c.execute(sql, (trabajador_name, trabajador_code))
+        c.execute(sql, (trabajador_name, trabajador_code, trabajador_password))
         conn.commit()
+        st.success("Trabajador añadido correctamente.")
     except sqlite3.IntegrityError:
-        st.error("Trabajador code already exists.")
+        st.error("El código del trabajador ya existe.")
     except Error as e:
-        st.error(f"Error adding trabajador: {e}")
+        st.error(f"Error al añadir trabajador: {e}")
 def add_component(conn, component_name):
     """Add a new component to the components table and return its ID."""
     sql = 'INSERT INTO components(component_name) VALUES(?)'

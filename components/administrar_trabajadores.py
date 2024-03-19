@@ -3,17 +3,14 @@ from database.repository import add_trabajador
 
 def administrar_trabajadores(conn):
     """
-    Administra los trabajadores.
+    Administra los trabajadores, permitiendo añadir nuevos con nombre, código y contraseña.
 
     Parameters:
     - conn: La conexión a la base de datos.
-
-    Returns:
-    None
     """
-    st.header("Administrar Componentes")
+    st.header("Administrar Trabajadores")
     trabajador_name = st.text_input("Nombre del Trabajador", "")
     trabajador_code = st.text_input("Código del Trabajador", "")
+    trabajador_password = st.text_input("Contraseña del Trabajador", type="password")
     if st.button("Añadir Trabajador"):
-        add_trabajador(conn, trabajador_name, trabajador_code)
-        st.success("Trabajador añadido correctamente.")
+        add_trabajador(conn, trabajador_name, trabajador_code, trabajador_password)

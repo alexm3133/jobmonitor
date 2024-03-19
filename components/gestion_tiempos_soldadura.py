@@ -32,8 +32,8 @@ def gestion_tiempos_soldadura(conn):
     quantity = st.number_input("Cantidad Soldada", min_value=1, value=1, step=1)
     start_date = st.date_input("Fecha de Inicio", datetime.now())
     end_date = st.date_input("Fecha de Fin", datetime.now())
-    start_time = st.time_input("Hora de Inicio", time(6, 0))
-    end_time = st.time_input("Hora de Fin", time(14, 0))
+    start_time = st.time_input("Hora de Inicio", time(6, 30))
+    end_time = st.time_input("Hora de Fin", time(14, 30))
     start_datetime = datetime.combine(start_date, start_time).strftime("%Y-%m-%d %H:%M")
     end_datetime = datetime.combine(end_date, end_time).strftime("%Y-%m-%d %H:%M")
     if st.button("Añadir Entrada"):
