@@ -15,13 +15,22 @@ def create_connection(db_file):
 
 def setup_database(conn):
     """
-    Create tables if they do not exist and perform any necessary initial setup, including admin user insertion.
+    Create tables if they do not exist and perform any necessary initial setup.
     """
-    # SQL statements for creating tables
-    sql_create_components_table = """ 
+    # Nueva tabla para Máquinas
+    sql_create_machines_table = """
+    CREATE TABLE IF NOT EXISTS machines (
+        id integer PRIMARY KEY,
+        machine_name text UNIQUE NOT NULL
+    ); """
+
+    # Modificar la tabla de Componentes para incluir machine_id
+    sql_create_components_table = """
     CREATE TABLE IF NOT EXISTS components (
         id integer PRIMARY KEY,
-        component_name text UNIQUE NOT NULL
+        machine_id integer NOT NULL,
+        component_name text UNIQUE NOT NULL,
+        FOREIGN KEY (machine_id) REFERENCES machines(id)
     ); """
     
     sql_create_soldering_entries_table = """
@@ -59,6 +68,7 @@ def setup_database(conn):
         try:
             c = conn.cursor()
             c.execute(sql_create_components_table)
+            c.execute(sql_create_machines_table)
             c.execute(sql_create_soldering_entries_table)
             c.execute(sql_create_users_table)
             c.execute(sql_create_codifications_table)
@@ -94,15 +104,3 @@ def insert_admin_user_if_not_exists(conn):
             print(f"Error inserting admin user: {e}")
     else:
         print("Admin user already exists.")
-
-def main():
-    database = "soldering_db.sqlite"
-
-    # Create a database connection
-    conn = create_connection(database)
-
-    # Setup database tables and ensure admin user is setup
-    setup_database(conn)
-
-if __name__ == '__main__':
-    main()

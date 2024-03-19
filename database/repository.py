@@ -24,19 +24,33 @@ def add_trabajador(conn, trabajador_name, trabajador_code, trabajador_password):
         st.error("El código del trabajador ya existe.")
     except Error as e:
         st.error(f"Error al añadir trabajador: {e}")
-def add_component(conn, component_name):
-    """Add a new component to the components table and return its ID."""
-    sql = 'INSERT INTO components(component_name) VALUES(?)'
+def add_machine(conn, machine_name):
+    """Añade una nueva máquina a la tabla de máquinas."""
+    sql = 'INSERT INTO machines(machine_name) VALUES(?)'
     try:
         c = conn.cursor()
-        c.execute(sql, (component_name,))
+        c.execute(sql, (machine_name,))
         conn.commit()
-        return c.lastrowid  # Devuelve el ID del nuevo componente
+        return c.lastrowid
     except sqlite3.IntegrityError:
-        st.error("Component name already exists.")
+        st.error("El nombre de la máquina ya existe.")
         return None
     except Error as e:
-        st.error(f"Error adding component: {e}")
+        st.error(f"Error al añadir máquina: {e}")
+        return None
+def add_component(conn, machine_id, component_name):
+    """Añade un nuevo componente asociado a una máquina en la tabla de componentes."""
+    sql = 'INSERT INTO components(machine_id, component_name) VALUES(?, ?)'
+    try:
+        c = conn.cursor()
+        c.execute(sql, (machine_id, component_name))
+        conn.commit()
+        return c.lastrowid
+    except sqlite3.IntegrityError:
+        st.error("El nombre del componente ya existe o la ID de la máquina no es válida.")
+        return None
+    except Error as e:
+        st.error(f"Error al añadir componente: {e}")
         return None
 
 
@@ -51,17 +65,28 @@ def get_trabajadores(conn):
     except Error as e:
         st.error(f"Error fetching trabajadores: {e}")
         return []
-def get_components(conn):
-    """Fetch all components from the components table"""
-    sql = 'SELECT * FROM components'
+def get_components(conn, machine_id=None):
+    """
+    Fetch all components from the components table.
+    If a machine_id is provided, fetch only components associated with that machine.
+    """
+    if machine_id:
+        sql = 'SELECT id, component_name FROM components WHERE machine_id = ?'
+        params = (machine_id,)
+    else:
+        sql = 'SELECT id, component_name FROM components'
+        params = ()
+
     try:
         c = conn.cursor()
-        c.execute(sql)
+        c.execute(sql, params)
         components = c.fetchall()
         return components
     except Error as e:
         st.error(f"Error fetching components: {e}")
         return []
+
+
     
 def add_entry(conn, worker_name, component_id, time_spent, start_datetime, quantity, start_datetime_str, end_datetime_str, codification):
     """Add a new entry to the soldering_entries table with detailed time and codification."""
@@ -81,6 +106,8 @@ def get_entries(conn):
     """Fetch entries with component, piece, codification, worker, start/end dates, quantity, and calculate total and average time spent per piece."""
     sql = '''
     SELECT 
+        se.id,
+        m.machine_name,
         c.component_name, 
         se.codification, 
         u.trabajador_name, 
@@ -100,6 +127,18 @@ def get_entries(conn):
         return entries
     except Error as e:
         st.error(f"Error fetching entries: {e}")
+        return []
+    
+def get_machines(conn):
+    """Fetch all machines from the machines table."""
+    sql = 'SELECT id, machine_name FROM machines'
+    try:
+        c = conn.cursor()
+        c.execute(sql)
+        machines = c.fetchall()
+        return machines
+    except Error as e:
+        st.error(f"Error fetching machines: {e}")
         return []
 
 
@@ -162,5 +201,7 @@ def add_codification(conn, component_id, codification):
         c = conn.cursor()
         c.execute(sql, (component_id, codification))
         conn.commit()
+        return True  # Indica éxito
     except Error as e:
-        st.error(f"Error adding codification: {e}")
+        st.error(f"Error añadiendo codificación al componente: {e}")
+        return False  # Indica fallo

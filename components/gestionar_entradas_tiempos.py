@@ -14,7 +14,7 @@ def gestionar_entradas_tiempos(conn):
     """
     st.header("Gestionar entradas")
     entries = get_entries(conn)
-    entries_df = pd.DataFrame(entries, columns=['Componente', 'Codification', 'Empleado', 'Fecha inicio', 'Fecha fin', 'Qt', 'Tiempo Total', 'Tiempo medio'])
+    entries_df = pd.DataFrame(entries, columns=['ID', 'Máquina', 'Componente', 'Codificación', 'Empleado', 'Fecha Inicio', 'Fecha Fin', 'Cantidad', 'Tiempo Total', 'Tiempo Medio'])
     st.dataframe(entries_df)
     
     """ PENDIENTE IMPLEMENTAR
