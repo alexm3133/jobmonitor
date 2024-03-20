@@ -5,15 +5,12 @@ from utils.calcular_horas_laborales import calcular_horas_laborales, segundos_a_
         
 def gestion_tiempos_soldadura(conn):
     st.title('Gestion Tiempos Soldadura')
-    
     # Obtener trabajadores
     workers_name = get_trabajadores(conn)
     worker_options = {"Elija un empleado": None}
     worker_options.update({worker[1]: worker[0] for worker in workers_name})
     selected_worker = st.selectbox("Empleado", list(worker_options.keys()))
     selected_worker_id = worker_options[selected_worker]
-
-    # Obtener máquinas
     machines = get_machines(conn)
     machine_options = {"Elija una máquina": None}
     machine_options.update({machine[1]: machine[0] for machine in machines})
@@ -51,12 +48,14 @@ def gestion_tiempos_soldadura(conn):
         add_entry(
             conn,
             selected_worker_id,
+            selected_machine_id,
             selected_component_id,
+            selected_codification,
             tiempo_trabajado_decimal,
             start_datetime.strftime("%Y-%m-%d %H:%M"),
             quantity,
             start_datetime.strftime("%Y-%m-%d %H:%M"),
-            end_datetime.strftime("%Y-%m-%d %H:%M"),
-            selected_codification
+            end_datetime.strftime("%Y-%m-%d %H:%M")
         )
         st.success(f"Entrada añadida correctamente! Tiempo trabajado: {horas_trabajadas} horas y {minutos_trabajados} minutos")
+   

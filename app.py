@@ -2,10 +2,9 @@ import streamlit as st
 from streamlit_option_menu import option_menu
 from database.database_connection import create_connection, setup_database
 from components.gestion_tiempos_soldadura import gestion_tiempos_soldadura
-from components.gestionar_entradas_tiempos import gestionar_entradas_tiempos
-from components.generar_graficos import generar_graficos
 from components.administrar_componentes import administrar_componentes
 from components.administrar_trabajadores import administrar_trabajadores
+from components.gestionar_entradas import gestionar_entradas
 from auth.auth import logout
 from components.login import login_page
 
@@ -22,8 +21,7 @@ def app():
         # Full menu options for priority 1 users
         menu_options = {
             "Gestion Tiempos Soldadura": gestion_tiempos_soldadura,
-            "Gestionar Entradas": gestionar_entradas_tiempos,
-            "Generar Reporte": generar_graficos,
+            "Historial": gestionar_entradas,
             "Administrar Componentes": administrar_componentes,
             "Administrar Trabajadores": administrar_trabajadores,
         }
