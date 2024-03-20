@@ -12,5 +12,6 @@ def administrar_trabajadores(conn):
     trabajador_name = st.text_input("Nombre del Trabajador", "")
     trabajador_code = st.text_input("Código del Trabajador", "")
     trabajador_password = st.text_input("Contraseña del Trabajador", type="password")
+    priority = st.selectbox("Prioridad del Trabajador", [1, 2, 3], index=1)
     if st.button("Añadir Trabajador"):
-        add_trabajador(conn, trabajador_name, trabajador_code, trabajador_password)
+        add_trabajador(conn, trabajador_name, trabajador_code, trabajador_password, priority)

@@ -3,7 +3,7 @@ from sqlite3 import Error
 import pandas as pd
 import streamlit as st
 
-def add_trabajador(conn, trabajador_name, trabajador_code, trabajador_password):
+def add_trabajador(conn, trabajador_name, trabajador_code, trabajador_password, priority=2):
     """
     Añade un nuevo trabajador a la tabla de usuarios con contraseña.
 
@@ -12,12 +12,13 @@ def add_trabajador(conn, trabajador_name, trabajador_code, trabajador_password):
     - trabajador_name: Nombre del trabajador.
     - trabajador_code: Código único del trabajador.
     - trabajador_password: Contraseña del trabajador.
+    - priority: Prioridad del trabajador (1, 2, o 3).
     """
-    sql = '''INSERT INTO users(trabajador_name, trabajador_code, trabajador_password)
-             VALUES(?, ?, ?)'''
+    sql = '''INSERT INTO users(trabajador_name, trabajador_code, trabajador_password, priority)
+             VALUES(?, ?, ?, ?)'''
     try:
         c = conn.cursor()
-        c.execute(sql, (trabajador_name, trabajador_code, trabajador_password))
+        c.execute(sql, (trabajador_name, trabajador_code, trabajador_password, priority))
         conn.commit()
         st.success("Trabajador añadido correctamente.")
     except sqlite3.IntegrityError:
