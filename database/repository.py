@@ -88,7 +88,7 @@ def get_components(conn, machine_id=None):
 
 
     
-def add_entry(conn, worker_name, component_id, time_spent, start_datetime, quantity, start_datetime_str, end_datetime_str, codification):
+def add_entry(conn, worker_name, machine_name, component_id, time_spent, start_datetime, quantity, start_datetime_str, end_datetime_str, codification):
     """Add a new entry to the soldering_entries table with detailed time and codification."""
     sql = '''INSERT INTO soldering_entries(worker_name, component_id, time_spent, date, quantity, start_time, end_time, codification) VALUES(?,?,?,?,?,?,?,?)'''
     # La fecha ahora se extrae del 'start_datetime'
