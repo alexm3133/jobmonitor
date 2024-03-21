@@ -8,7 +8,7 @@ def authenticate_user(user_code, password):
     """Authenticate a user based on their worker code, password, and retrieves their priority."""
     conn = create_connection(database)  
     try:
-        sql = '''SELECT * FROM users WHERE trabajador_code=? AND trabajador_password=?'''
+        sql = '''SELECT * FROM users WHERE worker_code=? AND worker_password=?'''
         cur = conn.cursor()
         cur.execute(sql, (user_code, password))
         account = cur.fetchone()

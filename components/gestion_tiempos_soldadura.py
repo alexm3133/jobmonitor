@@ -1,12 +1,11 @@
 import streamlit as st  
-from database.repository import add_entry, get_trabajadores, get_components, get_codifications_for_component, get_machines
+from database.repository import add_entry, get_workers, get_components, get_codifications_for_component, get_machines
 from datetime import datetime, time
 from utils.calcular_horas_laborales import calcular_horas_laborales, segundos_a_horas_minutos
         
 def gestion_tiempos_soldadura(conn):
     st.title('Gestion Tiempos Soldadura')
-    # Obtener trabajadores
-    workers_name = get_trabajadores(conn)
+    workers_name = get_workers(conn)
     worker_options = {"Elija un empleado": None}
     worker_options.update({worker[1]: worker[0] for worker in workers_name})
     selected_worker = st.selectbox("Empleado", list(worker_options.keys()))

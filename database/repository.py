@@ -3,22 +3,22 @@ from sqlite3 import Error
 import pandas as pd
 import streamlit as st
 
-def add_trabajador(conn, trabajador_name, trabajador_code, trabajador_password, priority=2):
+def add_worker(conn, worker_name, worker_code, worker_password, priority=2):
     """
-    Añade un nuevo trabajador a la tabla de usuarios con contraseña.
+    Añade un nuevo worker a la tabla de usuarios con contraseña.
 
     Parameters:
     - conn: La conexión a la base de datos.
-    - trabajador_name: Nombre del trabajador.
-    - trabajador_code: Código único del trabajador.
-    - trabajador_password: Contraseña del trabajador.
-    - priority: Prioridad del trabajador (1, 2, o 3).
+    - worker_name: Nombre del worker.
+    - worker_code: Código único del worker.
+    - worker_password: Contraseña del worker.
+    - priority: Prioridad del worker (1, 2, o 3).
     """
-    sql = '''INSERT INTO users(trabajador_name, trabajador_code, trabajador_password, priority)
+    sql = '''INSERT INTO users(worker_name, worker_code, worker_password, priority)
              VALUES(?, ?, ?, ?)'''
     try:
         c = conn.cursor()
-        c.execute(sql, (trabajador_name, trabajador_code, trabajador_password, priority))
+        c.execute(sql, (worker_name, worker_code, worker_password, priority))
         conn.commit()
         st.success("Trabajador añadido correctamente.")
     except sqlite3.IntegrityError:
@@ -55,14 +55,14 @@ def add_component(conn, machine_id, component_name):
         return None
 
 
-def get_trabajadores(conn):
-    """Fetch all trabajadores from the users table"""
+def get_workers(conn):
+    """Fetch all workers from the users table"""
     sql = 'SELECT * FROM users'
     try:
         c = conn.cursor()
         c.execute(sql)
-        trabajadores = c.fetchall()
-        return trabajadores
+        workers = c.fetchall()
+        return workers
     except Error as e:
         st.error(f"Error fetching trabajadores: {e}")
         return []

@@ -36,7 +36,7 @@ def setup_database(conn):
     sql_create_soldering_entries_table = """
     CREATE TABLE IF NOT EXISTS soldering_entries (
         id integer PRIMARY KEY,
-        worker_id integer NOT NULL,  -- Cambiado de worker_name a worker_id para usar el ID del trabajador
+        worker_name text NOT NULL,
         machine_id integer NOT NULL,
         component_id integer NOT NULL,
         time_spent real NOT NULL,
@@ -45,7 +45,7 @@ def setup_database(conn):
         quantity integer NOT NULL DEFAULT 1,
         start_time text,
         end_time text,
-        FOREIGN KEY (worker_id) REFERENCES users (id),  -- Asegúrate de que la clave foránea ahora apunta correctamente a users
+        FOREIGN KEY (worker_name) REFERENCES users (worker_name),  -- Asegúrate de que la clave foránea ahora apunta correctamente a users
         FOREIGN KEY (machine_id) REFERENCES machines (id),
         FOREIGN KEY (component_id) REFERENCES components (id)
     );"""
@@ -53,9 +53,9 @@ def setup_database(conn):
     sql_create_users_table = """
     CREATE TABLE IF NOT EXISTS users (
         id integer PRIMARY KEY,
-        trabajador_name text NOT NULL,
-        trabajador_code text UNIQUE NOT NULL,
-        trabajador_password text NOT NULL,
+        worker_name text NOT NULL,
+        worker_code text UNIQUE NOT NULL,
+        worker_password text NOT NULL,
         priority integer DEFAULT 2
     );"""
 

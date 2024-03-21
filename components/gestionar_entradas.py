@@ -1,19 +1,19 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-from database.repository import get_trabajadores, get_entries, get_machines, get_components
+from database.repository import get_workers, get_entries, get_machines, get_components
 
 def gestionar_entradas(conn):
     st.title('Gestionar Entradas')
 
     # Obtener trabajadores
-    trabajadores = get_trabajadores(conn)
-    trabajador_options = {trabajador[1]: trabajador[0] for trabajador in trabajadores}
-    trabajador_options['Todos los trabajadores'] = None
+    workers = get_workers(conn)
+    worker_options = {worker[1]: worker[0] for worker in workers}
+    worker_options['Todos los trabajadores'] = None
 
     # Filtrar por trabajador
-    selected_worker = st.selectbox("Empleado", list(trabajador_options.keys()))
-    selected_worker_name = trabajador_options.get(selected_worker)
+    selected_worker = st.selectbox("Empleado", list(worker_options.keys()))
+    selected_worker_name = worker_options.get(selected_worker)
 
     # Filtrar por fechas
     start_date = st.date_input("Fecha de Inicio", value=datetime.now(), key="start_date")
@@ -35,7 +35,7 @@ def gestionar_entradas(conn):
         df = pd.DataFrame(entries, columns=column_names)
         df['machine_name'] = df['machine_id'].map(machines)
         df['component_name'] = df['component_id'].map(components)
-        df = df[['worker_name', 'machine_name', 'component_name', 'time_spent', 'date', 'quantity', 'start_time', 'end_time']]
+        df = df[['machine_name', 'component_name', 'time_spent', 'date', 'quantity', 'start_time', 'end_time']]
         st.dataframe(df)
     else:
         st.warning("No se encontraron entradas.")

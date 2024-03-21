@@ -3,7 +3,7 @@ from streamlit_option_menu import option_menu
 from database.database_connection import create_connection, setup_database
 from components.gestion_tiempos_soldadura import gestion_tiempos_soldadura
 from components.administrar_componentes import administrar_componentes
-from components.administrar_trabajadores import administrar_trabajadores
+from components.administrar_trabajadores import administrar_workers
 from components.gestionar_entradas import gestionar_entradas
 from auth.auth import logout
 from components.login import login_page
@@ -23,7 +23,7 @@ def app():
             "Gestion Tiempos Soldadura": gestion_tiempos_soldadura,
             "Historial": gestionar_entradas,
             "Administrar Componentes": administrar_componentes,
-            "Administrar Trabajadores": administrar_trabajadores,
+            "Administrar Trabajadores": administrar_workers,
         }
         menu_icons = ["tools", "clipboard-data", "graph-up", "puzzle", "person"]
         with st.sidebar:
