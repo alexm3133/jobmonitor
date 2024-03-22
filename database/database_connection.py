@@ -1,85 +1,102 @@
-import sqlite3
 from sqlite3 import Error
+import sqlite3
 
 def create_connection(db_file):
     """
-    Create a database connection to the SQLite database specified by db_file.
+    Crea una conexión a la base de datos SQLite especificada por db_file.
     """
     conn = None
     try:
         conn = sqlite3.connect(db_file)
-        print("Connection established to", db_file)
+        print(f"Conexión establecida a {db_file}")
     except Error as e:
-        print(f"Error connecting to database: {e}")
+        print(f"Error al conectar a la base de datos: {e}")
     return conn
 
 def setup_database(conn):
     """
-    Create tables if they do not exist and perform any necessary initial setup.
+    Crea las tablas si no existen y realiza la configuración inicial necesaria.
     """
-    # Nueva tabla para Máquinas
     sql_create_machines_table = """
     CREATE TABLE IF NOT EXISTS machines (
-        id integer PRIMARY KEY,
-        machine_name text UNIQUE NOT NULL
-    ); """
+        id INTEGER PRIMARY KEY,
+        machine_name TEXT NOT NULL
+    );"""
 
-    # Modificar la tabla de Componentes para incluir machine_id
     sql_create_components_table = """
     CREATE TABLE IF NOT EXISTS components (
-        id integer PRIMARY KEY,
-        machine_id integer NOT NULL,
-        component_name text UNIQUE NOT NULL,
-        FOREIGN KEY (machine_id) REFERENCES machines(id)
-    ); """
-    
+        id INTEGER PRIMARY KEY,
+        component_name TEXT NOT NULL
+    );"""
+
+    sql_create_machine_components_table = """
+    CREATE TABLE IF NOT EXISTS machine_components (
+        id INTEGER PRIMARY KEY,
+        machine_id INTEGER NOT NULL,
+        component_id INTEGER NOT NULL,
+        FOREIGN KEY (machine_id) REFERENCES machines(id),
+        FOREIGN KEY (component_id) REFERENCES components(id),
+        UNIQUE (machine_id, component_id)
+    );"""
+
+    sql_create_component_codifications_table = """
+    CREATE TABLE IF NOT EXISTS component_codifications (
+        id INTEGER PRIMARY KEY,
+        machine_id INTEGER NOT NULL,
+        component_id INTEGER NOT NULL,
+        codification TEXT NOT NULL,
+        FOREIGN KEY (machine_id) REFERENCES machines(id),
+        FOREIGN KEY (component_id) REFERENCES components(id),
+        UNIQUE (machine_id, component_id, codification)
+    );"""
+
     sql_create_soldering_entries_table = """
     CREATE TABLE IF NOT EXISTS soldering_entries (
-        id integer PRIMARY KEY,
-        worker_name text NOT NULL,
-        machine_id integer NOT NULL,
-        component_id integer NOT NULL,
-        time_spent real NOT NULL,
-        date text NOT NULL,
-        codification text,
-        quantity integer NOT NULL DEFAULT 1,
-        start_time text,
-        end_time text,
-        FOREIGN KEY (worker_name) REFERENCES users (worker_name),  -- Asegúrate de que la clave foránea ahora apunta correctamente a users
-        FOREIGN KEY (machine_id) REFERENCES machines (id),
-        FOREIGN KEY (component_id) REFERENCES components (id)
+        id INTEGER PRIMARY KEY,
+        worker_name INTEGER NOT NULL,
+        machine_id INTEGER NOT NULL,
+        component_id INTEGER NOT NULL,
+        codification_id INTEGER NOT NULL,
+        time_spent REAL NOT NULL,
+        date TEXT NOT NULL,
+        quantity INTEGER NOT NULL DEFAULT 1,
+        start_time TEXT,
+        end_time TEXT,
+        FOREIGN KEY (worker_name) REFERENCES users(id),
+        FOREIGN KEY (machine_id) REFERENCES machines(id),
+        FOREIGN KEY (component_id) REFERENCES components(id),
+        FOREIGN KEY (codification_id) REFERENCES component_codifications(id)
     );"""
 
     sql_create_users_table = """
     CREATE TABLE IF NOT EXISTS users (
-        id integer PRIMARY KEY,
-        worker_name text NOT NULL,
-        worker_code text UNIQUE NOT NULL,
-        worker_password text NOT NULL,
-        priority integer DEFAULT 2
-    );"""
-
-    sql_create_codifications_table = """
-    CREATE TABLE IF NOT EXISTS component_codifications (
-        id integer PRIMARY KEY,
-        component_id integer NOT NULL,
-        codification text NOT NULL,
-        UNIQUE(component_id, codification),
-        FOREIGN KEY (component_id) REFERENCES components (id)
+        id INTEGER PRIMARY KEY,
+        worker_name TEXT NOT NULL,
+        worker_code TEXT UNIQUE NOT NULL,
+        worker_password TEXT NOT NULL,
+        priority INTEGER DEFAULT 2
     );"""
 
     if conn is not None:
         try:
             c = conn.cursor()
-            c.execute(sql_create_components_table)
             c.execute(sql_create_machines_table)
+            c.execute(sql_create_components_table)
+            c.execute(sql_create_machine_components_table)
+            c.execute(sql_create_component_codifications_table)
             c.execute(sql_create_soldering_entries_table)
             c.execute(sql_create_users_table)
-            c.execute(sql_create_codifications_table)
-            print("Database tables are set up.")
-            
+            print("Las tablas de la base de datos han sido configuradas.")
         except Error as e:
-            print(f"Error creating tables: {e}")
+            print(f"Error al crear las tablas: {e}")
     else:
-        print("Error! cannot create the database connection.")
+        print("¡Error! No se pudo crear la conexión a la base de datos.")
 
+# Ejemplo de uso
+database = r"../soldering_db.sqlite"
+
+conn = create_connection(database)
+
+if conn is not None:
+    setup_database(conn)
+    conn.close()

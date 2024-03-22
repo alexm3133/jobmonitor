@@ -3,6 +3,7 @@ from sqlite3 import Error
 import pandas as pd
 import streamlit as st
 
+
 def add_worker(conn, worker_name, worker_code, worker_password, priority=2):
     """
     Añade un nuevo worker a la tabla de usuarios con contraseña.
@@ -39,21 +40,36 @@ def add_machine(conn, machine_name):
     except Error as e:
         st.error(f"Error al añadir máquina: {e}")
         return None
-def add_component(conn, machine_id, component_name):
-    """Añade un nuevo componente asociado a una máquina en la tabla de componentes."""
-    sql = 'INSERT INTO components(machine_id, component_name) VALUES(?, ?)'
+def add_component(conn, component_name):
+    """Añade un nuevo componente a la tabla de componentes."""
+    sql = 'INSERT INTO components(component_name) VALUES(?)'
     try:
         c = conn.cursor()
-        c.execute(sql, (machine_id, component_name))
+        c.execute(sql, (component_name,))
+        component_id = c.lastrowid
         conn.commit()
-        return c.lastrowid
+        return component_id
     except sqlite3.IntegrityError:
-        st.error("El nombre del componente ya existe o la ID de la máquina no es válida.")
+        st.error("El nombre del componente ya existe.")
         return None
     except Error as e:
         st.error(f"Error al añadir componente: {e}")
         return None
 
+def add_machine_component(conn, machine_id, component_id):
+    """Asocia un componente existente con una máquina."""
+    sql = 'INSERT INTO machine_components(machine_id, component_id) VALUES(?, ?)'
+    try:
+        c = conn.cursor()
+        c.execute(sql, (machine_id, component_id))
+        conn.commit()
+        return True
+    except sqlite3.IntegrityError:
+        st.error("La combinación de máquina y componente ya existe.")
+        return False
+    except Error as e:
+        st.error(f"Error al asociar componente con máquina: {e}")
+        return False
 
 def get_workers(conn):
     """Fetch all workers from the users table"""
@@ -67,19 +83,20 @@ def get_workers(conn):
         st.error(f"Error fetching trabajadores: {e}")
         return []
 def get_components(conn, machine_id=None):
-    """
-    Fetch all components from the components table.
-    If a machine_id is provided, fetch only components associated with that machine.
-    """
-    if machine_id:
-        sql = 'SELECT id, component_name FROM components WHERE machine_id = ?'
-        params = (machine_id,)
-    else:
-        sql = 'SELECT id, component_name FROM components'
-        params = ()
-
     try:
         c = conn.cursor()
+        if machine_id:
+            sql = '''
+                SELECT c.id, c.component_name
+                FROM components c
+                JOIN machine_components mc ON c.id = mc.component_id
+                WHERE mc.machine_id = ?
+            '''
+            params = (machine_id,)
+        else:
+            sql = 'SELECT id, component_name FROM components'
+            params = ()
+        
         c.execute(sql, params)
         components = c.fetchall()
         return components
@@ -99,42 +116,55 @@ def get_machines(conn):
         st.error(f"Error fetching machines: {e}")
         return []
 
-def get_codifications_for_component(conn, component_id):
-    """Fetch codifications for a given component"""
-    sql = 'SELECT codification FROM component_codifications WHERE component_id = ?'
+def get_codifications_for_component(conn, machine_id, component_id):
+    """Obtiene las codificaciones para un componente en una máquina específica."""
+    sql = 'SELECT codification FROM component_codifications WHERE machine_id = ? AND component_id = ?'
     try:
         c = conn.cursor()
-        c.execute(sql, (component_id,))
+        c.execute(sql, (machine_id, component_id))
         codifications = c.fetchall()
         return [cod[0] for cod in codifications]  # Devuelve solo las codificaciones como una lista de strings
     except Error as e:
         st.error(f"Error fetching codifications: {e}")
         return []
-
-def add_codification(conn, component_id, codification):
-    """Add a new codification for a component."""
-    sql = 'INSERT INTO component_codifications(component_id, codification) VALUES(?, ?)'
+def add_codification(conn, machine_id, component_id, codification):
+    """Añade una nueva codificación para un componente en una máquina específica."""
+    sql = 'INSERT INTO component_codifications(machine_id, component_id, codification) VALUES(?, ?, ?)'
     try:
         c = conn.cursor()
-        c.execute(sql, (component_id, codification))
+        c.execute(sql, (machine_id, component_id, codification))
         conn.commit()
         return True  # Indica éxito
     except Error as e:
         st.error(f"Error añadiendo codificación al componente: {e}")
         return False  # Indica fallo
     
-def add_entry(conn, worker_name, machine_id, component_id,codification, time_spent, start_datetime, quantity, start_datetime_str, end_datetime_str):
-    """Add a new entry to the soldering_entries table with detailed time and codification."""
-    sql = '''INSERT INTO soldering_entries(worker_name, machine_id,codification, component_id, time_spent, date, quantity, start_time, end_time ) VALUES(?,?,?,?,?,?,?,?,?)'''
-    # La fecha ahora se extrae del 'start_datetime'
+def get_codification_id(conn, machine_id, component_id, codification):
+    """Obtiene el ID de la codificación para una combinación de máquina, componente y codificación."""
+    sql = 'SELECT id FROM component_codifications WHERE machine_id = ? AND component_id = ? AND codification = ?'
+    try:
+        c = conn.cursor()
+        c.execute(sql, (machine_id, component_id, codification))
+        codification_id = c.fetchone()
+        return codification_id[0] if codification_id else None
+    except Error as e:
+        st.error(f"Error obteniendo el ID de la codificación: {e}")
+        return None
+
+def add_entry(conn, worker_name, machine_id, component_id, codification_id, time_spent, start_datetime, quantity, start_datetime_str, end_datetime_str):
+    """Añade una nueva entrada a la tabla soldering_entries con el detalle de tiempo y codificación."""
+    # Ya no necesitas obtener el codification_id aquí, así que puedes eliminar esa parte
+    
+    sql = '''INSERT INTO soldering_entries(worker_name, machine_id, component_id, codification_id, time_spent, date, quantity, start_time, end_time) VALUES(?,?,?,?,?,?,?,?,?)'''
     date = start_datetime.split(' ')[0]
     try:
         c = conn.cursor()
-        # Asegúrate de pasar los argumentos en el orden correcto y formatear las fechas/horas como strings si es necesario
-        c.execute(sql, (worker_name, machine_id,component_id,codification, time_spent, date, quantity, start_datetime_str, end_datetime_str ))
+        c.execute(sql, (worker_name, machine_id, component_id, codification_id, time_spent, date, quantity, start_datetime_str, end_datetime_str))
         conn.commit()
+        st.success("Entrada añadida correctamente.")
     except Error as e:
-        st.error(f"Error adding entry: {e}")
+        st.error(f"Error al añadir entrada: {e}")
+
 
 def get_entries(conn, worker_name=None, start_date=None, end_date=None):
     """Fetch soldering entries from the soldering_entries table."""
@@ -166,3 +196,18 @@ def get_entries(conn, worker_name=None, start_date=None, end_date=None):
     except Error as e:
         st.error(f"Error fetching entries: {e}")
         return []
+    
+def add_machine_component(conn, machine_id, component_id):
+    """Asocia un componente existente con una máquina."""
+    sql = 'INSERT INTO machine_components(machine_id, component_id) VALUES(?, ?)'
+    try:
+        c = conn.cursor()
+        c.execute(sql, (machine_id, component_id))
+        conn.commit()
+        return True
+    except sqlite3.IntegrityError:
+        st.error("La combinación de máquina y componente ya existe.")
+        return False
+    except Error as e:
+        st.error(f"Error al asociar componente con máquina: {e}")
+        return False
