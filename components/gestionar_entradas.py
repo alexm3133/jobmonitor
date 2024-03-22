@@ -35,7 +35,15 @@ def gestionar_entradas(conn):
         df = pd.DataFrame(entries, columns=column_names)
         df['machine_name'] = df['machine_id'].map(machines)
         df['component_name'] = df['component_id'].map(components)
-        df = df[['machine_name', 'component_name', 'time_spent', 'date', 'quantity', 'start_time', 'end_time']]
+        df = df[['machine_name', 'component_name', 'time_spent', 'quantity', 'start_time', 'end_time']]
+        df = df.rename(columns={
+                'machine_name': 'Maquina',
+                'component_name': 'Componente',
+                'time_spent': 'Horas trabajadas',
+                'quantity': 'Qt',
+                'start_time': 'Fecha Inicio',
+                'end_time': 'Fecha Fin'
+            })
         st.dataframe(df)
     else:
         st.warning("No se encontraron entradas.")
