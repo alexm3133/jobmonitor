@@ -233,3 +233,4 @@ def verificar_solapamiento(conn, worker_id, start_datetime, end_datetime):
     except Error as e:
         st.error(f"Error verificando solapamiento: {e}")
         return True  # Por defecto, asumir que hay un error/solapamiento para evitar añadir entradas conflictivas.
+

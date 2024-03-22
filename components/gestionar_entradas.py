@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 from database.repository import get_workers, get_entries, get_machines, get_components, get_codifications_for_component
-
 def gestionar_entradas(conn):
     st.title('Gestionar Entradas')
 
