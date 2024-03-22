@@ -211,3 +211,25 @@ def add_machine_component(conn, machine_id, component_id):
     except Error as e:
         st.error(f"Error al asociar componente con máquina: {e}")
         return False
+    
+def verificar_solapamiento(conn, worker_id, start_datetime, end_datetime):
+    """Verifica si hay solapamiento de horario para el mismo trabajador."""
+    sql = '''
+    SELECT COUNT(*) FROM soldering_entries
+    WHERE worker_name = ? AND (
+        (start_time BETWEEN ? AND ?)
+        OR (end_time BETWEEN ? AND ?)
+        OR (start_time <= ? AND end_time >= ?)
+    )
+    '''
+    try:
+        c = conn.cursor()
+        c.execute(sql, (worker_id, start_datetime, end_datetime, start_datetime, end_datetime, start_datetime, end_datetime))
+        result = c.fetchone()
+        if result[0] > 0:
+            # Existe solapamiento
+            return True
+        return False
+    except Error as e:
+        st.error(f"Error verificando solapamiento: {e}")
+        return True  # Por defecto, asumir que hay un error/solapamiento para evitar añadir entradas conflictivas.

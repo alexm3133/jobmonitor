@@ -1,5 +1,5 @@
 import streamlit as st
-from database.repository import add_entry, get_workers, get_components, get_codifications_for_component, get_machines
+from database.repository import add_entry, get_workers, get_components, get_codifications_for_component, get_machines, verificar_solapamiento
 from datetime import datetime, time
 from utils.calcular_horas_laborales import calcular_horas_laborales, segundos_a_horas_minutos
 from sqlite3 import Error
@@ -59,8 +59,11 @@ def gestion_tiempos_soldadura(conn):
         
         if codification_id is None:
             st.error("No se encontró la codificación para la combinación de máquina y componente. Por favor, verifique la codificación.")
+        elif verificar_solapamiento(conn, selected_worker_id, start_datetime, end_datetime):
+            st.error("El trabajador ya tiene una tarea asignada en este intervalo de tiempo.")
+        elif start_datetime > end_datetime:
+            st.error("La fecha de inicio no puede ser mayor que la fecha de fin.")
         else:
-            # Llama a add_entry solo si codification_id no es None
             add_entry(
                 conn,
                 selected_worker_id,
