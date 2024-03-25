@@ -234,3 +234,6 @@ def verificar_solapamiento(conn, worker_id, start_datetime, end_datetime):
         st.error(f"Error verificando solapamiento: {e}")
         return True  # Por defecto, asumir que hay un error/solapamiento para evitar añadir entradas conflictivas.
 
+def component_exists_in_machine(conn, machine_id, component_name):
+    components = get_components(conn, machine_id)
+    return any(comp[1] == component_name for comp in components)
