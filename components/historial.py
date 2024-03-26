@@ -4,8 +4,6 @@ from datetime import datetime
 from database.repository import get_workers, get_entries, get_machines, get_components, get_codifications_for_component, delete_entry
 from sqlite3 import Error
 
-
-
 def gestionar_entradas(conn):
     st.title('Historial de trabajo')
 
@@ -71,11 +69,13 @@ def gestionar_entradas(conn):
     if st.checkbox("Mostrar detalles de las entradas"):
         st.write(entries)
 
-    # borrar entradas y confirmar antes de borrar 
-    if entries:
-        entry_id = st.number_input("ID de la entrada a borrar", min_value=1, max_value=entries[-1][0], value=entries[-1][0], step=1)
-        delete_clicked = st.button("Borrar entrada")
-        if delete_clicked:
-            delete_entry(conn, entry_id)
-            st.success("Entrada borrada correctamente.")
-
+    # borrar entradas y confirmar antes de borrar y refrescar la página
+    if st.checkbox("Borrar entradas"):
+        entry_id = st.number_input("ID de la entrada a borrar", min_value=0, step=1)
+        if st.button("Borrar entrada"):
+            try:
+                delete_entry(conn, entry_id)
+                st.success("Entrada borrada correctamente.")
+            except Error as e:
+                st.error(f"Error al borrar la entrada: {e}")
+            st.rerun()
