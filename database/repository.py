@@ -237,3 +237,41 @@ def verificar_solapamiento(conn, worker_id, start_datetime, end_datetime):
 def component_exists_in_machine(conn, machine_id, component_name):
     components = get_components(conn, machine_id)
     return any(comp[1] == component_name for comp in components)
+
+def edit_entry(conn, entry_id, **kwargs):
+    """
+    Edita una entrada existente en la tabla soldering_entries basándose en su id.
+    
+    Parameters:
+    - conn: La conexión a la base de datos.
+    - entry_id: El identificador único de la entrada a editar.
+    - kwargs: Los campos y valores que se van a actualizar.
+    """
+    fields_to_update = [f"{key} = ?" for key in kwargs]
+    values_to_update = list(kwargs.values())
+    sql = f"UPDATE soldering_entries SET {', '.join(fields_to_update)} WHERE id = ?"
+    try:
+        c = conn.cursor()
+        c.execute(sql, values_to_update + [entry_id])
+        conn.commit()
+        st.success("Entrada actualizada correctamente.")
+    except Error as e:
+        st.error(f"Error al actualizar la entrada: {e}")
+
+def delete_entry(conn, entry_id):
+    """
+    Borra una entrada específica de la tabla soldering_entries basándose en su id.
+    
+    Parameters:
+    - conn: La conexión a la base de datos.
+    - entry_id: El identificador único de la entrada a borrar.
+    """
+    sql = "DELETE FROM soldering_entries WHERE id = ?"
+    try:
+        c = conn.cursor()
+        c.execute(sql, (entry_id,))
+        conn.commit()
+        st.success("Entrada borrada correctamente.")
+    except Error as e:
+        st.error(f"Error al borrar la entrada: {e}")
+
