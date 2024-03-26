@@ -48,7 +48,7 @@ def administrar_componentes(conn):
 
         if component_id:
             codification_text = st.text_input("Añadir Nueva Codificación", "")
-            if st.button("Añadir Codificación"):
+            if st.button("Añadir Codificación") and codification_text:
                 success = add_codification(conn, selected_machine_id, component_id, codification_text)
                 if success:
                     st.success("Codificación añadida correctamente al componente.")

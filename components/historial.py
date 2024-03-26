@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 from database.repository import get_workers, get_entries, get_machines, get_components, get_codifications_for_component
+
 def gestionar_entradas(conn):
     st.title('Gestionar Entradas')
 
@@ -41,13 +42,11 @@ def gestionar_entradas(conn):
 
         df['machine_name'] = df['machine_id'].map({machine_id: machine_name for machine_id, machine_name in machines.items()})
         df['component_name'] = df.apply(lambda row: components.get((row['machine_id'], row['component_id']), (None, None))[1], axis=1)
-        df['codification'] = df.apply(lambda row: codifications.get((row['machine_id'], row['component_id']), [None])[0], axis=1)
-
-        df = df[['machine_name', 'component_name', 'codification', 'time_spent', 'quantity', 'start_time', 'end_time']]
+        df = df[['machine_name', 'component_name', 'codification_id', 'time_spent', 'quantity', 'start_time', 'end_time']]
         df = df.rename(columns={
             'machine_name': 'Maquina',
             'component_name': 'Componente',
-            'codification': 'Codificación',
+            'codification_id': 'ID Codificación',
             'time_spent': 'Horas trabajadas',
             'quantity': 'Qt',
             'start_time': 'Fecha Inicio',

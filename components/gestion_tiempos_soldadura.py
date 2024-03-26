@@ -1,5 +1,5 @@
 import streamlit as st
-from database.repository import add_entry, get_workers, get_components, get_codifications_for_component, get_machines, verificar_solapamiento
+from database.repository import add_entry, get_workers, get_components, get_codifications_for_component, get_machines, verificar_solapamiento, get_codification_id
 from datetime import datetime, time
 from utils.calcular_horas_laborales import calcular_horas_laborales, segundos_a_horas_minutos
 from sqlite3 import Error
@@ -69,24 +69,13 @@ def gestion_tiempos_soldadura(conn):
                 selected_worker_id,
                 selected_machine_id,
                 selected_component_id,
-                codification_id,  # Usa directamente el codification_id obtenido
+                selected_codification,  
                 tiempo_trabajado_decimal,
                 start_datetime.strftime("%Y-%m-%d %H:%M"),
                 quantity,
                 start_datetime.strftime("%Y-%m-%d %H:%M"),
                 end_datetime.strftime("%Y-%m-%d %H:%M")
             )
-
+            print(selected_worker_id, selected_machine_id, selected_component_id, selected_codification, tiempo_trabajado_decimal, start_datetime.strftime("%Y-%m-%d %H:%M"), quantity, start_datetime.strftime("%Y-%m-%d %H:%M"), end_datetime.strftime("%Y-%m-%d %H:%M"))
             st.success(f"Entrada añadida correctamente! Tiempo trabajado: {horas_trabajadas} horas y {minutos_trabajados} minutos")
 
-def get_codification_id(conn, machine_id, component_id, codification):
-    """Obtiene el ID de la codificación para una combinación de máquina, componente y codificación."""
-    sql = 'SELECT id FROM component_codifications WHERE machine_id = ? AND component_id = ? AND codification = ?'
-    try:
-        c = conn.cursor()
-        c.execute(sql, (machine_id, component_id, codification))
-        codification_id = c.fetchone()
-        return codification_id[0] if codification_id else None
-    except Error as e:
-        st.error(f"Error obteniendo el ID de la codificación: {e}")
-        return None

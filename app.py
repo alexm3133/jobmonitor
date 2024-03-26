@@ -4,7 +4,7 @@ from database.database_connection import setup_database, create_connection
 from components.gestion_tiempos_soldadura import gestion_tiempos_soldadura
 from components.administrar_componentes import administrar_componentes
 from components.administrar_trabajadores import administrar_workers
-from components.gestionar_entradas import gestionar_entradas
+from components.historial import gestionar_entradas
 from auth.auth import logout
 from components.login import login_page
 
