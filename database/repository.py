@@ -238,26 +238,6 @@ def component_exists_in_machine(conn, machine_id, component_name):
     components = get_components(conn, machine_id)
     return any(comp[1] == component_name for comp in components)
 
-def edit_entry(conn, entry_id, **kwargs):
-    """
-    Edita una entrada existente en la tabla soldering_entries basándose en su id.
-    
-    Parameters:
-    - conn: La conexión a la base de datos.
-    - entry_id: El identificador único de la entrada a editar.
-    - kwargs: Los campos y valores que se van a actualizar.
-    """
-    fields_to_update = [f"{key} = ?" for key in kwargs]
-    values_to_update = list(kwargs.values())
-    sql = f"UPDATE soldering_entries SET {', '.join(fields_to_update)} WHERE id = ?"
-    try:
-        c = conn.cursor()
-        c.execute(sql, values_to_update + [entry_id])
-        conn.commit()
-        st.success("Entrada actualizada correctamente.")
-    except Error as e:
-        st.error(f"Error al actualizar la entrada: {e}")
-
 def delete_entry(conn, entry_id):
     """
     Borra una entrada específica de la tabla soldering_entries basándose en su id.
@@ -275,3 +255,29 @@ def delete_entry(conn, entry_id):
     except Error as e:
         st.error(f"Error al borrar la entrada: {e}")
 
+def get_employee_data(conn, user_id):
+    """
+    Obtiene los datos de un empleado específico de la tabla de usuarios.
+    
+    Parameters:
+    - conn: La conexión a la base de datos.
+    - user_id: El identificador único del empleado.
+    
+    Returns:
+    Una tupla con los datos del empleado o None si el empleado no existe.
+    """
+    sql = 'SELECT * FROM users WHERE worker_code = ?'
+    try:
+        c = conn.cursor()
+        c.execute(sql, (user_id,))
+        employee_data = c.fetchone()
+        if employee_data:
+            # Suponiendo que la tabla 'users' tiene las columnas 'id', 'worker_name', 'worker_code', 'worker_password', y 'priority'
+            # Convertir la tupla a un diccionario para un manejo más fácil de los datos
+            columns = ['id', 'worker_name', 'worker_code', 'worker_password', 'priority']
+            return dict(zip(columns, employee_data))
+        else:
+            return None
+    except Error as e:
+        st.error(f"Error al obtener los datos del empleado: {e}")
+        return None

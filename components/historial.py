@@ -45,8 +45,9 @@ def gestionar_entradas(conn):
 
         df['machine_name'] = df['machine_id'].map({machine_id: machine_name for machine_id, machine_name in machines.items()})
         df['component_name'] = df.apply(lambda row: components.get((row['machine_id'], row['component_id']), (None, None))[1], axis=1)
-        df = df[['machine_name', 'component_name', 'codification_id', 'time_spent', 'quantity', 'start_time', 'end_time']]
+        df = df[['id','machine_name', 'component_name', 'codification_id', 'time_spent', 'quantity', 'start_time', 'end_time']]
         df = df.rename(columns={
+            'id': 'ID',
             'machine_name': 'Maquina',
             'component_name': 'Componente',
             'codification_id': 'ID Codificación',
@@ -61,6 +62,7 @@ def gestionar_entradas(conn):
         st.warning("No se encontraron entradas.")
 
     # Descargar CSV y preguntar donde guardarlo 
+
     if st.button("Descargar CSV"):
         csv = df.to_csv(index=False)
         st.download_button(label="Descargar CSV", data=csv, file_name="historial.csv", mime="text/csv")
@@ -69,9 +71,11 @@ def gestionar_entradas(conn):
     if st.checkbox("Mostrar detalles de las entradas"):
         st.write(entries)
 
-    # borrar entradas
+    # borrar entradas y confirmar antes de borrar 
     if entries:
         entry_id = st.number_input("ID de la entrada a borrar", min_value=1, max_value=entries[-1][0], value=entries[-1][0], step=1)
-        if st.button("Borrar entrada"):
+        delete_clicked = st.button("Borrar entrada")
+        if delete_clicked:
             delete_entry(conn, entry_id)
             st.success("Entrada borrada correctamente.")
+

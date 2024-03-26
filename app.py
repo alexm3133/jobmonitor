@@ -5,6 +5,7 @@ from components.gestion_tiempos_soldadura import gestion_tiempos_soldadura
 from components.administrar_componentes import administrar_componentes
 from components.administrar_trabajadores import administrar_workers
 from components.historial import gestionar_entradas
+from components.empleado import empleado
 from auth.auth import logout
 from components.login import login_page
 
@@ -21,8 +22,8 @@ def app():
     if user_priority == 1:
         # Full menu options for priority 1 users
         menu_options = {
-            "Gestion Tiempos Soldadura": gestion_tiempos_soldadura,
             "Historial": gestionar_entradas,
+            "Gestion Tiempos Soldadura": gestion_tiempos_soldadura,
             "Administrar Componentes": administrar_componentes,
             "Administrar Trabajadores": administrar_workers,
         }
@@ -30,14 +31,14 @@ def app():
         with st.sidebar:
             selected_option = option_menu("Menú Principal", list(menu_options.keys()), 
                                         icons=menu_icons, menu_icon="cast", default_index=0)
-
         if selected_option:
             menu_options[selected_option](conn)
     else:
         # Only show a greeting for non-priority 1 users
         menu_options = {
-            "Hola": lambda: st.sidebar.write("¡Hola! No tienes acceso a las funciones administrativas.")
+            "Tu espacio": lambda: st.sidebar.write("¡Hola! No tienes acceso a las funciones administrativas.")
         }
+        empleado(conn)
         
         menu_icons = ["emoji-smile"]
         with st.sidebar:
@@ -47,6 +48,7 @@ def app():
     # Logout button
     if st.sidebar.button("Cerrar session"):
         logout()
+    
 
 # Authentication check before showing the app
 if 'authenticated' not in st.session_state:
