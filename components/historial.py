@@ -5,6 +5,7 @@ from database.repository import get_workers, get_entries, get_machines, get_comp
 from sqlite3 import Error
 from utils.convertir_hora_i_minutos import convertir_a_horas_minutos
 
+
 def gestionar_entradas(conn):
  
     st.title('Historial de trabajo')
@@ -12,7 +13,7 @@ def gestionar_entradas(conn):
     # Obtener trabajadores
     workers = get_workers(conn)
     worker_options = {worker[1]: worker[0] for worker in workers}
-    worker_options['Todos los trabajadores'] = None  # Opción para seleccionar todos
+    worker_options['Todos los trabajadores'] = None
 
     # Filtrar por trabajador
     selected_worker = st.selectbox("Empleado", list(worker_options.keys()))
@@ -42,20 +43,19 @@ def gestionar_entradas(conn):
         cursor.execute("SELECT * FROM soldering_entries")
         column_names = [desc[0] for desc in cursor.description]
         df = pd.DataFrame(entries, columns=column_names)
-
         df['machine_name'] = df['machine_id'].map({machine_id: machine_name for machine_id, machine_name in machines.items()})
         df['component_name'] = df.apply(lambda row: components.get((row['machine_id'], row['component_id']), (None, None))[1], axis=1)
-
-        # Convertir 'time_spent' a formato de horas y minutos
+        df['media_por_componente_decimal'] = df['time_spent'] / df['quantity']
         df['time_spent'] = df['time_spent'].apply(convertir_a_horas_minutos)
-
-        df = df[['id', 'machine_name', 'component_name', 'codification_id', 'time_spent', 'quantity', 'observaciones', 'start_time', 'end_time']]
+        df['media_por_componente'] = df['media_por_componente_decimal'].apply(convertir_a_horas_minutos)
+        df = df[['id', 'machine_name', 'component_name', 'codification_id', 'time_spent', 'media_por_componente', 'quantity', 'observaciones', 'start_time', 'end_time']]
         df = df.rename(columns={
             'id': 'ID',
             'machine_name': 'Maquina',
             'component_name': 'Componente',
             'codification_id': 'ID Codificación',
             'time_spent': 'Horas trabajadas',
+            'media_por_componente': 'Media por Componente',  # Nombre de la nueva columna
             'quantity': 'Qt',
             'observaciones': 'Observaciones',
             'start_time': 'Fecha Inicio',
@@ -64,9 +64,10 @@ def gestionar_entradas(conn):
         st.dataframe(df)
     else:
         st.warning("No se encontraron entradas.")
-    
-    # Descargar CSV
-    if st.button("Descargar CSV") and entries:
+
+    # Descargar CSV y preguntar donde guardarlo 
+
+    if st.button("Descargar CSV"):
         csv = df.to_csv(index=False)
         st.download_button(label="Descargar CSV", data=csv, file_name="historial.csv", mime="text/csv")
 
@@ -74,7 +75,7 @@ def gestionar_entradas(conn):
     if st.checkbox("Mostrar detalles de las entradas"):
         st.write(entries)
 
-    # Borrar entradas y confirmar antes de borrar y refrescar la página
+    # borrar entradas y confirmar antes de borrar y refrescar la página
     if st.checkbox("Borrar entradas"):
         entry_id = st.number_input("ID de la entrada a borrar", min_value=0, step=1)
         if st.button("Borrar entrada"):
@@ -83,4 +84,4 @@ def gestionar_entradas(conn):
                 st.success("Entrada borrada correctamente.")
             except Error as e:
                 st.error(f"Error al borrar la entrada: {e}")
-            st.experimental_rerun()
+            st.rerun()
