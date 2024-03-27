@@ -6,6 +6,7 @@ from components.administrar_componentes import administrar_componentes
 from components.administrar_trabajadores import administrar_workers
 from components.historial import gestionar_entradas
 from components.empleado import empleado
+from components.utilidades import utilidades
 from auth.auth import logout
 from components.login import login_page
 
@@ -26,6 +27,7 @@ def app():
             "Gestion Tiempos Soldadura": gestion_tiempos_soldadura,
             "Administrar Componentes": administrar_componentes,
             "Administrar Trabajadores": administrar_workers,
+            "Utilidades": utilidades
         }
         menu_icons = ["tools", "clipboard-data", "graph-up", "puzzle", "person"]
         with st.sidebar:

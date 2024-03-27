@@ -1,8 +1,9 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 from database.repository import get_workers, get_entries, get_machines, get_components, get_codifications_for_component, delete_entry
 from sqlite3 import Error
+from utils.convertir_hora_i_minutos import convertir_a_horas_minutos
 
 def gestionar_entradas(conn):
  
@@ -11,14 +12,14 @@ def gestionar_entradas(conn):
     # Obtener trabajadores
     workers = get_workers(conn)
     worker_options = {worker[1]: worker[0] for worker in workers}
-    worker_options['Todos los trabajadores'] = None
+    worker_options['Todos los trabajadores'] = None  # Opción para seleccionar todos
 
     # Filtrar por trabajador
     selected_worker = st.selectbox("Empleado", list(worker_options.keys()))
     selected_worker_name = worker_options.get(selected_worker)
 
     # Filtrar por fechas
-    start_date = st.date_input("Fecha de Inicio", value=datetime.now(), key="start_date")
+    start_date = st.date_input("Fecha de Inicio", value=datetime.now() - timedelta(days=30), key="start_date")
     end_date = st.date_input("Fecha de Fin", value=datetime.now(), key="end_date")
 
     # Obtener entradas
@@ -45,30 +46,27 @@ def gestionar_entradas(conn):
         df['machine_name'] = df['machine_id'].map({machine_id: machine_name for machine_id, machine_name in machines.items()})
         df['component_name'] = df.apply(lambda row: components.get((row['machine_id'], row['component_id']), (None, None))[1], axis=1)
 
-        # Calcular media por componente
-        df['media_por_componente'] = df['time_spent'] / df['quantity']
+        # Convertir 'time_spent' a formato de horas y minutos
+        df['time_spent'] = df['time_spent'].apply(convertir_a_horas_minutos)
 
-        # Seleccionar y renombrar columnas para el DataFrame
-        df = df[['id','machine_name', 'component_name', 'codification_id', 'time_spent','media_por_componente', 'quantity', 'observaciones', 'start_time', 'end_time']]
+        df = df[['id', 'machine_name', 'component_name', 'codification_id', 'time_spent', 'quantity', 'observaciones', 'start_time', 'end_time']]
         df = df.rename(columns={
             'id': 'ID',
             'machine_name': 'Maquina',
             'component_name': 'Componente',
             'codification_id': 'ID Codificación',
             'time_spent': 'Horas trabajadas',
-            'media_por_componente': 'Media por Componente',  # Nombre de la nueva columna
             'quantity': 'Qt',
             'observaciones': 'Observaciones',
             'start_time': 'Fecha Inicio',
             'end_time': 'Fecha Fin'
         })
-
         st.dataframe(df)
     else:
         st.warning("No se encontraron entradas.")
-    # Descargar CSV y preguntar donde guardarlo 
-
-    if st.button("Descargar CSV"):
+    
+    # Descargar CSV
+    if st.button("Descargar CSV") and entries:
         csv = df.to_csv(index=False)
         st.download_button(label="Descargar CSV", data=csv, file_name="historial.csv", mime="text/csv")
 
@@ -76,7 +74,7 @@ def gestionar_entradas(conn):
     if st.checkbox("Mostrar detalles de las entradas"):
         st.write(entries)
 
-    # borrar entradas y confirmar antes de borrar y refrescar la página
+    # Borrar entradas y confirmar antes de borrar y refrescar la página
     if st.checkbox("Borrar entradas"):
         entry_id = st.number_input("ID de la entrada a borrar", min_value=0, step=1)
         if st.button("Borrar entrada"):
@@ -85,4 +83,4 @@ def gestionar_entradas(conn):
                 st.success("Entrada borrada correctamente.")
             except Error as e:
                 st.error(f"Error al borrar la entrada: {e}")
-            st.rerun()
+            st.experimental_rerun()
