@@ -40,6 +40,7 @@ def gestion_tiempos_soldadura(conn):
 
     # Otras entradas del formulario
     quantity = st.number_input("Cantidad Soldada", min_value=1, value=1, step=1)
+    observaciones = st.text_area("Observaciones")
     start_date = st.date_input("Fecha de Inicio", datetime.now())
     end_date = st.date_input("Fecha de Fin", datetime.now())
     start_time = st.time_input("Hora de Inicio", time(6, 30))
@@ -73,9 +74,10 @@ def gestion_tiempos_soldadura(conn):
                 tiempo_trabajado_decimal,
                 start_datetime.strftime("%Y-%m-%d %H:%M"),
                 quantity,
+                observaciones,
                 start_datetime.strftime("%Y-%m-%d %H:%M"),
                 end_datetime.strftime("%Y-%m-%d %H:%M")
             )
-            print(selected_worker_id, selected_machine_id, selected_component_id, selected_codification, tiempo_trabajado_decimal, start_datetime.strftime("%Y-%m-%d %H:%M"), quantity, start_datetime.strftime("%Y-%m-%d %H:%M"), end_datetime.strftime("%Y-%m-%d %H:%M"))
+            print(selected_worker_id, selected_machine_id, selected_component_id, selected_codification, tiempo_trabajado_decimal, start_datetime.strftime("%Y-%m-%d %H:%M"), quantity, observaciones, start_datetime.strftime("%Y-%m-%d %H:%M"), end_datetime.strftime("%Y-%m-%d %H:%M"))
             st.success(f"Entrada añadida correctamente! Tiempo trabajado: {horas_trabajadas} horas y {minutos_trabajados} minutos")
 

@@ -60,6 +60,7 @@ def setup_database(conn):
         time_spent REAL NOT NULL,
         date TEXT NOT NULL,
         quantity INTEGER NOT NULL DEFAULT 1,
+        observaciones TEXT,
         start_time TEXT,
         end_time TEXT,
         FOREIGN KEY (worker_name) REFERENCES users(id),

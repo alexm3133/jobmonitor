@@ -5,6 +5,7 @@ from database.repository import get_workers, get_entries, get_machines, get_comp
 from sqlite3 import Error
 
 def gestionar_entradas(conn):
+ 
     st.title('Historial de trabajo')
 
     # Obtener trabajadores
@@ -43,14 +44,21 @@ def gestionar_entradas(conn):
 
         df['machine_name'] = df['machine_id'].map({machine_id: machine_name for machine_id, machine_name in machines.items()})
         df['component_name'] = df.apply(lambda row: components.get((row['machine_id'], row['component_id']), (None, None))[1], axis=1)
-        df = df[['id','machine_name', 'component_name', 'codification_id', 'time_spent', 'quantity', 'start_time', 'end_time']]
+
+        # Calcular media por componente
+        df['media_por_componente'] = df['time_spent'] / df['quantity']
+
+        # Seleccionar y renombrar columnas para el DataFrame
+        df = df[['id','machine_name', 'component_name', 'codification_id', 'time_spent','media_por_componente', 'quantity', 'observaciones', 'start_time', 'end_time']]
         df = df.rename(columns={
             'id': 'ID',
             'machine_name': 'Maquina',
             'component_name': 'Componente',
             'codification_id': 'ID Codificación',
             'time_spent': 'Horas trabajadas',
+            'media_por_componente': 'Media por Componente',  # Nombre de la nueva columna
             'quantity': 'Qt',
+            'observaciones': 'Observaciones',
             'start_time': 'Fecha Inicio',
             'end_time': 'Fecha Fin'
         })
@@ -58,7 +66,6 @@ def gestionar_entradas(conn):
         st.dataframe(df)
     else:
         st.warning("No se encontraron entradas.")
-
     # Descargar CSV y preguntar donde guardarlo 
 
     if st.button("Descargar CSV"):

@@ -151,22 +151,22 @@ def get_codification_id(conn, machine_id, component_id, codification):
         st.error(f"Error obteniendo el ID de la codificación: {e}")
         return None
 
-def add_entry(conn, worker_name, machine_id, component_id, codification_id, time_spent, start_datetime, quantity, start_datetime_str, end_datetime_str):
+def add_entry(conn, worker_name, machine_id, component_id, codification_id, time_spent, start_datetime, quantity, observaciones, start_datetime_str, end_datetime_str):
     """Añade una nueva entrada a la tabla soldering_entries con el detalle de tiempo y codificación."""
     # Ya no necesitas obtener el codification_id aquí, así que puedes eliminar esa parte
     
-    sql = '''INSERT INTO soldering_entries(worker_name, machine_id, component_id, codification_id, time_spent, date, quantity, start_time, end_time) VALUES(?,?,?,?,?,?,?,?,?)'''
+    sql = '''INSERT INTO soldering_entries(worker_name, machine_id, component_id, codification_id, time_spent, date, quantity, observaciones, start_time, end_time) VALUES(?,?,?,?,?,?,?,?,?,?)'''
     date = start_datetime.split(' ')[0]
     try:
         c = conn.cursor()
-        c.execute(sql, (worker_name, machine_id, component_id, codification_id, time_spent, date, quantity, start_datetime_str, end_datetime_str))
+        c.execute(sql, (worker_name, machine_id, component_id, codification_id, time_spent, date, quantity, observaciones, start_datetime_str, end_datetime_str))
         conn.commit()
         st.success("Entrada añadida correctamente.")
     except Error as e:
         st.error(f"Error al añadir entrada: {e}")
 
 
-def get_entries(conn, worker_name=None, start_date=None, end_date=None):
+def get_entries(conn, worker_name=None,observaciones=None, start_date=None, end_date=None):
     """Fetch soldering entries from the soldering_entries table."""
     conditions = []
     params = []
@@ -174,6 +174,11 @@ def get_entries(conn, worker_name=None, start_date=None, end_date=None):
     if worker_name:
         conditions.append("worker_name = ?")
         params.append(worker_name)
+    
+    #get observaciones
+    if observaciones:
+        conditions.append("observaciones = ?")
+        params.append(observaciones)
 
     if start_date and end_date:
         conditions.append("date BETWEEN ? AND ?")

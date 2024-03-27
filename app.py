@@ -14,7 +14,7 @@ from components.login import login_page
 database = "soldering_db.sqlite"
 conn = create_connection(database)
 setup_database(conn)
-
+st. set_page_config(layout="wide")
 # Main application function
 def app():
     # Check user priority and display options based on that
