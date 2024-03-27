@@ -8,7 +8,7 @@ from utils.convertir_hora_i_minutos import convertir_a_horas_minutos
 
 def gestionar_entradas(conn):
  
-    st.title('Historial de trabajo')
+    st.title('Historial de trabajo empleados')
 
     # Obtener trabajadores
     workers = get_workers(conn)
