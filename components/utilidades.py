@@ -15,3 +15,4 @@ def utilidades(conn=None):
     horas = int(total_minutos // 60)
     minutos = int(total_minutos % 60)
     st.write(f"{horas}h {minutos}min")
+

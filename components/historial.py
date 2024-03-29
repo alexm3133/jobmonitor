@@ -48,14 +48,25 @@ def gestionar_entradas(conn):
         df['media_por_componente_decimal'] = df['time_spent'] / df['quantity']
         df['time_spent'] = df['time_spent'].apply(convertir_a_horas_minutos)
         df['media_por_componente'] = df['media_por_componente_decimal'].apply(convertir_a_horas_minutos)
-        df = df[['id', 'machine_name', 'component_name', 'codification_id', 'time_spent', 'media_por_componente', 'quantity', 'observaciones', 'start_time', 'end_time']]
+
+        # Asegurarse de que 'Todos los trabajadores' no esté en el diccionario
+        if 'Todos los trabajadores' in worker_options:
+            del worker_options['Todos los trabajadores']
+
+        # Invertir el diccionario para mapear ID de trabajadores a nombres
+        id_to_worker_name = {v: k for k, v in worker_options.items()}
+
+        # Mapear los ID de empleados a nombres en el DataFrame
+        df['worker_name'] = df['worker_name'].map(id_to_worker_name)
+
+        df = df[['worker_name','machine_name','component_name', 'codification_id', 'time_spent', 'media_por_componente', 'quantity', 'observaciones', 'start_time', 'end_time']]
         df = df.rename(columns={
-            'id': 'ID',
+            'worker_name': 'Empleado',
             'machine_name': 'Maquina',
             'component_name': 'Componente',
             'codification_id': 'ID Codificación',
             'time_spent': 'Horas trabajadas',
-            'media_por_componente': 'Media por Componente',  # Nombre de la nueva columna
+            'media_por_componente': 'Media por Componente',
             'quantity': 'Qt',
             'observaciones': 'Observaciones',
             'start_time': 'Fecha Inicio',
@@ -64,6 +75,7 @@ def gestionar_entradas(conn):
         st.dataframe(df)
     else:
         st.warning("No se encontraron entradas.")
+
 
     # Descargar CSV y preguntar donde guardarlo 
 
