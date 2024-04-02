@@ -153,8 +153,6 @@ def get_codification_id(conn, machine_id, component_id, codification):
 
 def add_entry(conn, worker_name, machine_id, component_id, codification_id, time_spent, start_datetime, quantity, observaciones, start_datetime_str, end_datetime_str):
     """Añade una nueva entrada a la tabla soldering_entries con el detalle de tiempo y codificación."""
-    # Ya no necesitas obtener el codification_id aquí, así que puedes eliminar esa parte
-    
     sql = '''INSERT INTO soldering_entries(worker_name, machine_id, component_id, codification_id, time_spent, date, quantity, observaciones, start_time, end_time) VALUES(?,?,?,?,?,?,?,?,?,?)'''
     date = start_datetime.split(' ')[0]
     try:
@@ -164,7 +162,6 @@ def add_entry(conn, worker_name, machine_id, component_id, codification_id, time
         st.success("Entrada añadida correctamente.")
     except Error as e:
         st.error(f"Error al añadir entrada: {e}")
-
 
 def get_entries(conn, worker_name=None,observaciones=None, start_date=None, end_date=None):
     """Fetch soldering entries from the soldering_entries table."""
@@ -286,3 +283,21 @@ def get_employee_data(conn, user_id):
     except Error as e:
         st.error(f"Error al obtener los datos del empleado: {e}")
         return None
+
+def add_event(conn, title, start_date, end_date, worker_id=None):
+    sql = '''INSERT INTO events(title, start_date, end_date, worker_id)
+             VALUES(?, ?, ?, ?)'''
+    c = conn.cursor()
+    c.execute(sql, (title, start_date, end_date, worker_id))
+    conn.commit()
+
+def get_events(conn, worker_id=None):
+    sql = 'SELECT id, title, start_date, end_date FROM events'
+    if worker_id:
+        sql += ' WHERE worker_id = ?'
+        params = (worker_id,)
+    else:
+        params = ()
+    c = conn.cursor()
+    c.execute(sql, params)
+    return c.fetchall()

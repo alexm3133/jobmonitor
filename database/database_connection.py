@@ -77,7 +77,15 @@ def setup_database(conn):
         worker_password TEXT NOT NULL,
         priority INTEGER DEFAULT 2
     );"""
-
+    sql_create_events_table = """
+    CREATE TABLE IF NOT EXISTS events (
+        id INTEGER PRIMARY KEY,
+        title TEXT NOT NULL,
+        start_date TEXT NOT NULL,
+        end_date TEXT,
+        worker_id INTEGER,
+        FOREIGN KEY (worker_id) REFERENCES users(id)
+    );"""
     if conn is not None:
         try:
             c = conn.cursor()
@@ -87,6 +95,7 @@ def setup_database(conn):
             c.execute(sql_create_component_codifications_table)
             c.execute(sql_create_soldering_entries_table)
             c.execute(sql_create_users_table)
+            c.execute(sql_create_events_table)
             print("Las tablas de la base de datos han sido configuradas.")
         except Error as e:
             print(f"Error al crear las tablas: {e}")
