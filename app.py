@@ -14,13 +14,30 @@ from data_scrapping.empleados import insert_employees_from_csv
 from data_scrapping.maquinas import insert_machines_from_csv
 
 
+def check_if_employees_exist(conn):
+    """Verifica si ya existen empleados en la base de datos."""
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM users")
+    count = cursor.fetchone()[0]
+    return count > 0
+
+def check_if_machines_exist(conn):
+    """Verifica si ya existen máquinas en la base de datos."""
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM machines")
+    count = cursor.fetchone()[0]
+    return count > 0
+
 # Initialize the database
 database = "soldering_db.sqlite"
 conn = create_connection(database)
 setup_database(conn)
 st. set_page_config(layout="wide")
-insert_employees_from_csv('data/empleados.csv', 'soldering_db.sqlite')
-insert_machines_from_csv('data/maquinas.csv', 'soldering_db.sqlite')
+if not check_if_employees_exist(conn):
+    insert_employees_from_csv('data/empleados.csv', conn)
+
+if not check_if_machines_exist(conn):
+    insert_machines_from_csv('data/maquinas.csv', conn)
 # Main application function
 def app():
     # Check user priority and display options based on that
