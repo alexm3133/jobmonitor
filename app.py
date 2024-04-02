@@ -10,6 +10,8 @@ from components.utilidades import utilidades
 from components.calendario import calendario
 from auth.auth import logout
 from components.login import login_page
+from data_scrapping.empleados import insert_employees_from_csv
+from data_scrapping.maquinas import insert_machines_from_csv
 
 
 # Initialize the database
@@ -17,6 +19,8 @@ database = "soldering_db.sqlite"
 conn = create_connection(database)
 setup_database(conn)
 st. set_page_config(layout="wide")
+insert_employees_from_csv('data/empleados.csv', 'soldering_db.sqlite')
+insert_machines_from_csv('data/maquinas.csv', 'soldering_db.sqlite')
 # Main application function
 def app():
     # Check user priority and display options based on that
