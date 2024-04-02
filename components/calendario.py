@@ -1,6 +1,6 @@
 from streamlit_calendar import calendar as st_calendar
 import streamlit as st
-from database.repository import get_workers, add_event, get_events  # Asegúrate de tener estas funciones definidas
+from database.repository import get_workers, add_event, get_events, delete_event
 
 def calendario(conn):
     # Sección lateral para mostrar la lista de trabajadores
@@ -65,3 +65,21 @@ def calendario(conn):
 
         calendar_component = st_calendar(options=calendar_options, custom_css=custom_css)
         st.write(calendar_component)
+
+        st.write("Eliminar Evento")
+        if selected_worker_id:
+            events = get_events(conn, selected_worker_id)
+        else:
+            events = get_events(conn)
+
+        if events:
+            event_titles = {f"{event[1]} ({event[2]} - {event[3]})": event[0] for event in events}  # crea un diccionario título: id
+            selected_event_to_delete = st.selectbox("Selecciona un evento para eliminar", options=[""] + list(event_titles.keys()))
+            if st.button("Eliminar Evento Seleccionado"):
+                if selected_event_to_delete:  # asegúrate de que se haya seleccionado un evento
+                    delete_event(conn, event_titles[selected_event_to_delete])
+                    st.success("Evento eliminado correctamente")
+                else:
+                    st.error("Por favor, selecciona un evento para eliminar")
+        else:
+            st.write("No hay eventos para mostrar")

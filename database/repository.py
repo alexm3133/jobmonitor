@@ -301,3 +301,15 @@ def get_events(conn, worker_id=None):
     c = conn.cursor()
     c.execute(sql, params)
     return c.fetchall()
+
+def delete_event(conn, event_id):
+    """
+    Elimina un evento específico por su ID.
+    """
+    sql = 'DELETE FROM events WHERE id = ?'
+    try:
+        c = conn.cursor()
+        c.execute(sql, (event_id,))
+        conn.commit()
+    except Error as e:
+        print(f"Error al eliminar el evento: {e}")
