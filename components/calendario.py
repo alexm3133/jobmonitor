@@ -28,13 +28,16 @@ def calendario(conn):
                     add_event(conn, title, start_date, None, selected_worker_id)
                     st.success("Evento añadido")
 
-        # Mostrar eventos en el calendario para el trabajador seleccionado o todos
         if selected_worker_id:
             events = get_events(conn, selected_worker_id)
         else:
             events = get_events(conn)  # Llama a get_events sin parámetros para obtener todos los eventos
 
-        events_for_calendar = [{"title": event[1], "start": event[2], "end": event[3] if event[3] else event[2], "resourceId": event[0]} for event in events]
+        events_for_calendar = []
+        for event in events:
+            event_id, title, start_date, end_date, worker_id, worker_name = event
+            title_with_worker = f"{title} ({worker_name})" if worker_name else title
+            events_for_calendar.append({"title": title_with_worker, "start": start_date, "end": end_date if end_date else start_date, "resourceId": worker_id})
 
         calendar_options = {
             "editable": "true",

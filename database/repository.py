@@ -292,15 +292,20 @@ def add_event(conn, title, start_date, end_date, worker_id=None):
     conn.commit()
 
 def get_events(conn, worker_id=None):
-    sql = 'SELECT id, title, start_date, end_date FROM events'
+    sql = '''
+    SELECT e.id, e.title, e.start_date, e.end_date, e.worker_id, u.worker_name
+    FROM events e
+    LEFT JOIN users u ON e.worker_id = u.id
+    '''
     if worker_id:
-        sql += ' WHERE worker_id = ?'
+        sql += ' WHERE e.worker_id = ?'
         params = (worker_id,)
     else:
         params = ()
     c = conn.cursor()
     c.execute(sql, params)
     return c.fetchall()
+
 
 def delete_event(conn, event_id):
     """
