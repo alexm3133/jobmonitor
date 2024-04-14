@@ -1,24 +1,26 @@
+import sqlite3
+import bcrypt
 import streamlit as st
 from database.database_connection import create_connection
-
 
 database = "soldering_db.sqlite"
 
 def authenticate_user(user_code, password):
-    """Authenticate a user based on their worker code, password, and retrieves their priority."""
-    conn = create_connection(database)  
+    """Authenticate a user based on their worker code and password, and retrieves their priority, using hashed password verification."""
+    conn = create_connection(database)
     try:
-        sql = '''SELECT * FROM users WHERE worker_code=? AND worker_password=?'''
+        sql = '''SELECT worker_password, priority FROM users WHERE worker_code=?'''
         cur = conn.cursor()
-        cur.execute(sql, (user_code, password))
-        account = cur.fetchone()
-        if account:
-            # Assuming 'prioridad' is the 5th column in the 'users' table
-            st.session_state['authenticated'] = True
-            st.session_state['user_priority'] = account[4]  # adjust the index based on your table structure
-            return True
-        else:
-            return False
+        cur.execute(sql, (user_code,))
+        result = cur.fetchone()
+        if result:
+            stored_password_hash, priority = result
+            # Verificar la contraseña ingresada con el hash almacenado
+            if bcrypt.checkpw(password.encode('utf-8'), stored_password_hash):
+                st.session_state['authenticated'] = True
+                st.session_state['user_priority'] = priority
+                return True
+        return False
     finally:
         conn.close()
 

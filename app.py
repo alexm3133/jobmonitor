@@ -12,6 +12,7 @@ from auth.auth import logout
 from components.login import login_page
 from data_scrapping.empleados import insert_employees_from_csv
 from data_scrapping.maquinas import insert_machines_from_csv
+from database.create_admin_user import create_admin_user
 
 
 def check_if_employees_exist(conn):
@@ -32,6 +33,8 @@ def check_if_machines_exist(conn):
 database = "soldering_db.sqlite"
 conn = create_connection(database)
 setup_database(conn)
+create_admin_user('soldering_db.sqlite')
+
 st. set_page_config(layout="wide")
 if not check_if_employees_exist(conn):
     insert_employees_from_csv('data/empleados.csv', conn)
