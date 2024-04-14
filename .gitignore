@@ -1,5 +1,10 @@
 # Created by https://www.toptal.com/developers/gitignore/api/python
 # Edit at https://www.toptal.com/developers/gitignore?templates=python
+/data
+/venv
+/.vscode
+/data_scrapping
+soldering_db.sqlite
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
