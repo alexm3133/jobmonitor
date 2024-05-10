@@ -108,5 +108,5 @@ database = r"../soldering_db.sqlite"
 conn = create_connection(database)
 
 if conn is not None:
-    setup_database(conn)
+   # setup_database(conn)
     conn.close()
