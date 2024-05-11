@@ -6,7 +6,6 @@ from database.database_connection import create_connection
 database = "soldering_db.sqlite"
 
 def authenticate_user(user_code, password):
-    """Authenticate a user based on their worker code and password, and retrieves their priority, using hashed password verification."""
     conn = create_connection(database)
     try:
         sql = '''SELECT worker_password, priority FROM users WHERE worker_code=?'''
@@ -15,14 +14,28 @@ def authenticate_user(user_code, password):
         result = cur.fetchone()
         if result:
             stored_password_hash, priority = result
-            # Verificar la contraseña ingresada con el hash almacenado
-            if bcrypt.checkpw(password.encode('utf-8'), stored_password_hash):
+            # Convert stored password hash to bytes if it is a string
+            if isinstance(stored_password_hash, str):
+                stored_password_hash = stored_password_hash.encode('utf-8')
+            # Convert password to bytes if it is a string
+            if isinstance(password, str):
+                password = password.encode('utf-8')
+            print(f"Stored hash type after conversion: {type(stored_password_hash)}")  # Debugging line for stored_password_hash
+            print(f"Password type after conversion: {type(password)}")  # Debugging line for password type
+            # Check the encoded password against the stored hash
+            if bcrypt.checkpw(password, stored_password_hash):
                 st.session_state['authenticated'] = True
                 st.session_state['user_priority'] = priority
                 return True
         return False
     finally:
         conn.close()
+
+
+
+
+
+
 
 def logout():
     st.session_state['authenticated'] = False

@@ -2,12 +2,12 @@ import sqlite3
 from sqlite3 import Error
 import pandas as pd
 import streamlit as st
-
+import bcrypt
 
 def add_worker(conn, worker_name, worker_code, worker_password, priority=2):
     """
-    Añade un nuevo worker a la tabla de usuarios con contraseña.
-
+    Añade un nuevo worker a la tabla de usuarios con contraseña hash.
+    
     Parameters:
     - conn: La conexión a la base de datos.
     - worker_name: Nombre del worker.
@@ -15,17 +15,21 @@ def add_worker(conn, worker_name, worker_code, worker_password, priority=2):
     - worker_password: Contraseña del worker.
     - priority: Prioridad del worker (1, 2, o 3).
     """
+    # Hash the password before storing it
+    hashed_password = bcrypt.hashpw(worker_password.encode('utf-8'), bcrypt.gensalt())
+    
     sql = '''INSERT INTO users(worker_name, worker_code, worker_password, priority)
              VALUES(?, ?, ?, ?)'''
     try:
         c = conn.cursor()
-        c.execute(sql, (worker_name, worker_code, worker_password, priority))
+        c.execute(sql, (worker_name, worker_code, hashed_password, priority))
         conn.commit()
         st.success("Trabajador añadido correctamente.")
     except sqlite3.IntegrityError:
         st.error("El código del trabajador ya existe.")
     except Error as e:
         st.error(f"Error al añadir trabajador: {e}")
+
 def add_machine(conn, machine_name):
     """Añade una nueva máquina a la tabla de máquinas."""
     sql = 'INSERT INTO machines(machine_name) VALUES(?)'
